@@ -26,15 +26,15 @@
 
         <div class="account_block">
             <img class="account_button favorite" src="{{ asset('assets/ui_icons/favorite.png') }}">
-            <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
+            @if (auth()->user())
+                <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+            @else
+                <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
+            @endif
             <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
         </div>
     </header>
-    
-        @if (session('success'))
-            <p class="correct"> {{ session('success') }} </p>
-        @endif 
-
+        
         <div class="breadcrumbs">
         </div>
 
@@ -167,17 +167,18 @@
                 </div>
             </div>
        
-            <form class="login_form" method="POST" action="{{ route('register') }}">
-                @csrf
-                <div class="login_in">
-                    <input class="_input" type="text" placeholder="Введите ваш e-mail">
+            <div class="account_block">
+                <form class="login_form form" method="GET" action="{{ route('login') }}">
+                    @csrf
+                    <input class="_input" type="text" name="email_login" placeholder="Введите ваш e-mail">
                     <div class="error_container"><p  class="error"></p></div>
-                    <input class="_input" type="text" placeholder="Введите пароль">
+                    <input class="_input" type="password" name="password_login" placeholder="Введите пароль">
                     <div class="error_container"><p  class="error"></p></div>
-                    <button class="_button">ВОЙТИ</button>
+                    <button  type="submit" class="_button">ВОЙТИ</button>
                     <p class="login_description">Нажимая на кнопку «Войти», Вы подтверждаете, что ознакомлены с Политикой конфиденциальности</p>
-                </div> 
-                <div class="registration">
+                </form> 
+                <form class="registration form" method="POST" action="{{ route('register') }}">
+                    @csrf
                     <input class="_input" name="name" type="text" placeholder="Введите ваше имя">
                     <div class="error_container"><p id="name-error" class="error"></p></div>
 
@@ -195,8 +196,16 @@
                     <div class="error_container"><p class="error"></p></div>
                     <button class="_button" type="submit" onclick="submitForm()">СОЗДАТЬ АККАУНТ</button>
                     <p class="login_description">Регистрируясь, Вы присоединяетесь к Правилам работы магазина и подтверждаете, что ознакомлены с Политикой конфиденциальности</p>
-                </div>        
-            </form>
+                </form>        
+            </div>
+        </div>
+
+        <div class="success_modal">
+            <div class="time_line"></div>
+            <div class="success_message">
+                <h1>Пользователь успешно зарегистрирован!</h1>
+                <p>Теперь все ваши покупки будут отображаться в корзине</p>
+            </div>
         </div>
     <script>
         const menu_btn = document.querySelector('.menu_button');
@@ -219,7 +228,7 @@
         const login = document.querySelector('.login');
         const reg = document.querySelector('.register');
         const modal_win = document.querySelector('.login_form');
-        const login_form = document.querySelector('.login_in');
+        const login_form = document.querySelector('.login_form');
         const registration_form = document.querySelector('.registration');
         let elementsAdded = false;
 
@@ -248,7 +257,6 @@
         });
 
         acc_cross_btn.addEventListener('click', function() {
-            console.log('+');
             burger.classList.toggle('active');
             const errorElements = document.querySelectorAll('.error');
             errorElements.forEach(element => {
@@ -280,7 +288,7 @@
         function submitForm() {
             event.preventDefault();
 
-            let form = document.querySelector('.login_form');
+            let form = document.querySelector('.registration');
             let formData = new FormData(form);
 
             fetch('/registration', {
@@ -308,7 +316,18 @@
                         document.querySelector('input[name="email"]').style.borderBottom = '1px solid red';
                     }
                 } else if (data.success) {
-                    alert('Пользователь успешно зарегистрирован.');
+                    const successModal = document.querySelector('.success_modal');
+                    var timeLine = document.querySelector('.time_line');
+                    const login_block = document.querySelector('.login_block');
+
+                    successModal.classList.add('active');
+                    timeLine.classList.add('active');
+                    login_block.classList.remove('active');
+                    // Через 5 секунд скрываем модальное окно
+                    setTimeout(() => {
+                        successModal.classList.remove('active');
+                        timeLine.classList.remove('active');
+                    }, 3000);
                     form.reset();
                 }
             })

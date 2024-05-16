@@ -27,8 +27,24 @@ class ProductController extends Controller
             ]);
         }
 
+        return view('home', compact('products', 'images', 'categories'));
+    }
+
+    public function store() {
+        $products = Product::all();
+        $images = Image::all();
+        $categories = Category::all();
+
+        if (request()->ajax()) {
+            return response()->json([
+                'products' => $products,
+                'images' => $images
+            ]);
+        }
+
         return view('shop', compact('products', 'images', 'categories'));
     }
+
 
     public function getManSection(Request $request) {
         $products = Product::where('gender', 'man')->get();
@@ -92,6 +108,28 @@ class ProductController extends Controller
             'images' => $images
         ]);
     }
+
+    public function filterByCategory($gender, $category)
+{
+    // Получить ID категории по имени (если нужно)
+    $categoryModel = Category::where('id', $category)->first();
+    if (!$categoryModel) {
+        return response()->json(['products' => [], 'images' => []]);
+    }
+
+    // Получить продукты по категории и полу
+    $products = Product::where('gender', $gender)
+                       ->whereHas('categories', function($query) use ($categoryModel) {
+                           $query->where('category_id', $categoryModel->id);
+                       })
+                       ->get();
+
+    // Получение изображений для продуктов
+    $images = Image::whereIn('product_id', $products->pluck('id'))->get();
+
+    return response()->json(['products' => $products, 'images' => $images]);
+}
+
 }
 
 

@@ -5,40 +5,81 @@ document.addEventListener("DOMContentLoaded", function () {
         .getElementById("man-section-btn")
         .addEventListener("click", function () {
             fetchSection("man");
+            document
+                .querySelectorAll(".category-filter")
+                .forEach((otherButton) => {
+                    otherButton.classList.remove("active");
+                    otherButton.disabled = false;
+            });
         });
 
     document
         .getElementById("woman-section-btn")
         .addEventListener("click", function () {
             fetchSection("woman");
+            document
+                .querySelectorAll(".category-filter")
+                .forEach((otherButton) => {
+                    otherButton.classList.remove("active");
+                    otherButton.disabled = false;
+            });
         });
 
-    function fetchSection(gender) {
-        let url = "/shop";
-        if (gender !== "all") {
-            url += `/${gender}`;
+    // Обработчик изменения категории
+    document.querySelectorAll(".category-filter").forEach((button) => {
+        button.addEventListener("click", function () {
+            document.querySelectorAll(".category-filter").forEach((otherButton) => {
+                otherButton.classList.remove('active');
+                otherButton.disabled = false;
+            });
+
+            const category = this.dataset.category;
+            const gender =
+                document.querySelector(".gender_bc").innerText === "Мужское"
+                    ? "man"
+                    : "woman";
+            fetchSection(gender, category);
+            button.classList.add('active');
+            button.disabled = true;
+        });
+    });
+
+    function fetchSection(gender, category = null) {
+        let url = `/shop/${gender}`;
+        if (category) {
+            url += `/${category}`;
         }
 
         fetch(url)
             .then((response) => response.json())
             .then((data) => {
                 updateProductList(data.products, data.images);
-                updateBreadcrumbs(gender);
+                updateBreadcrumbs(gender, category);
             })
             .catch((error) =>
                 console.error(`Error fetching ${gender} section:`, error)
             );
     }
 
-    function updateBreadcrumbs(gender) {
+    function updateBreadcrumbs(gender, category = null) {
         const breadcrumbs = document.querySelector(".breadcrumbs");
+        let categoryLabel = category
+            ? ` ${
+                  document.querySelector(
+                      `.category-filter[data-category="${category}"]`
+                  ).innerText
+              }`
+            : "";
         breadcrumbs.innerHTML = `
-        <p>Каталог</p>
-        <p class="line"> — </p> 
-        <span>${gender === "man" ? "Мужское" : "Женское"}</span>
-    `;
+            <p>Каталог</p>
+            <p class="line"> — </p> 
+            <span class="gender_bc">${
+                gender === "man" ? "Мужское" : "Женское"
+            }</span>
+            ${categoryLabel !== "" ? '<p class="line"> — </p>' : ""}
+            <span>${categoryLabel}</span>
+        `;
     }
-
 
     function updateProductList(products, images) {
         const productList = document.getElementById("product-list");

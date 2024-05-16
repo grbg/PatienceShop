@@ -18,11 +18,14 @@ use App\Http\Controllers\UserController;
 Route::get('/', [ProductController::class, 'index']);
 
 Route::post('/registration', [UserController::class, 'userRegister'])->name('register');
+Route::get('/login', [UserController::class, 'userLogin'])->name('login');
 
-Route::get('/shop', [ProductController::class, 'index']);
+Route::get('/shop', [ProductController::class, 'store']);
 
 Route::get('/shop/man', [ProductController::class, 'getManSection']);
 
 Route::get('/shop/woman', [ProductController::class, 'getWomanSection']);
 
 Route::post('/shop/filter', [ProductController::class, 'filterProducts'])->name('shop.filter');
+
+Route::get('/shop/{gender}/{category}', [ProductController::class, 'filterByCategory']);
