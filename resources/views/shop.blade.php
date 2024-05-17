@@ -36,6 +36,9 @@
     </header>
         
         <div class="breadcrumbs">
+            <p>Каталог</p>
+            <p class="line"> — </p> 
+            <span class="gender_bc">Все</span>
         </div>
 
         <div class="categories_container">

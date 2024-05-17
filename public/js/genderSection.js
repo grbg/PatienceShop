@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    fetchSection("all"); // Загрузить все товары при загрузке страницы
+    fetchSection("all"); 
 
     document
         .getElementById("man-section-btn")
@@ -34,13 +34,16 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             const category = this.dataset.category;
-            const gender =
-                document.querySelector(".gender_bc").innerText === "Мужское"
-                    ? "man"
-                    : "woman";
-            fetchSection(gender, category);
-            button.classList.add('active');
-            button.disabled = true;
+            const breadcrumbs = document.querySelector(".breadcrumbs");
+                const gender =
+                    document.querySelector(".gender_bc").innerText === "Мужское"
+                        ? "man"
+                        : document.querySelector(".gender_bc").innerText === "Женское" 
+                        ? "woman"
+                        : "all";
+                fetchSection(gender, category);
+                button.classList.add("active");
+                button.disabled = true;
         });
     });
 
@@ -74,7 +77,8 @@ document.addEventListener("DOMContentLoaded", function () {
             <p>Каталог</p>
             <p class="line"> — </p> 
             <span class="gender_bc">${
-                gender === "man" ? "Мужское" : "Женское"
+                
+                gender === "man" ? "Мужское" : gender === "woman" ? "Женское" : "Все"
             }</span>
             ${categoryLabel !== "" ? '<p class="line"> — </p>' : ""}
             <span>${categoryLabel}</span>

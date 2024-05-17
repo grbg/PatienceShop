@@ -116,8 +116,17 @@ class ProductController extends Controller
     if (!$categoryModel) {
         return response()->json(['products' => [], 'images' => []]);
     }
+    if ($gender === 'all') {
+        $products = Product::whereHas('categories', function($query) use ($categoryModel) {
+                           $query->where('category_id', $categoryModel->id);
+                       })
+                       ->get();
 
-    // Получить продукты по категории и полу
+        $images = Image::whereIn('product_id', $products->pluck('id'))->get();
+
+        return response()->json(['products' => $products, 'images' => $images]);
+    }
+    
     $products = Product::where('gender', $gender)
                        ->whereHas('categories', function($query) use ($categoryModel) {
                            $query->where('category_id', $categoryModel->id);
