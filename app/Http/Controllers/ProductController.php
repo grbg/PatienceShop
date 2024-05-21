@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Image;
+use Illuminate\Support\Facades\DB;
 use App\Models\Category;
+use Illuminate\Support\Facades\Storage; 
 
 class ProductController extends Controller
 {
@@ -45,6 +47,32 @@ class ProductController extends Controller
         return view('shop', compact('products', 'images', 'categories'));
     }
 
+    public function indexProduct()
+    {
+        $products = Product::all();
+        $images = Image::whereIn('product_id', $products->pluck('id'))->get();
+        $categories = Category::all();
+        $product_category = DB::table('category_product')->get();
+
+        if (request()->ajax()) {
+            return response()->json([
+                'products' => $products,
+                'images' => $images
+            ]);
+        }
+
+        // foreach ($products as $product) {
+        //     $product_categories = DB::table('category_product')
+        //         ->join('categories', 'category_product.category_id', '=', 'categories.id')
+        //         ->where('category_product.product_id', $product->id)
+        //         ->select('categories.category_name', 'categories.id')
+        //         ->get();
+
+        //     $product->categories = $product_categories;
+        // }
+
+        return view('product', compact('products', 'images', 'categories', 'product_category'));
+    }
 
     public function getManSection(Request $request) {
         $products = Product::where('gender', 'man')->get();
@@ -136,8 +164,115 @@ class ProductController extends Controller
     // Получение изображений для продуктов
     $images = Image::whereIn('product_id', $products->pluck('id'))->get();
 
-    return response()->json(['products' => $products, 'images' => $images]);
+    $categories = Category::all();
+
+        
+    $product_categories = DB::table('category_product')->get();
+
+    return response()->json([
+        'products' => $products, 
+        'images' => $images,
+        'categories' => $categories,
+        'product_categories' => $product_categories
+    ]);
 }
+
+    public function updateProduct(Request $request) {
+         $validatedData = $request->validate([
+             'product_id' => 'required|exists:products,id',
+             'product_name' => 'required|string|max:255',
+             'product_desc' => 'nullable|string',
+             'product_price' => 'required',
+             'gender' => 'required|in:man,woman',
+             'categories' => 'array|nullable',
+         ]);
+
+        $product = Product::find($request->product_id);
+        
+        $product->product_name = $request->product_name;
+        $product->description = $request->product_desc;
+        $product->price = $request->product_price;
+        $product->gender = $request->gender;
+        $product->save();
+        
+        if (isset($request->categories)) {
+            $product->categories()->sync($request->categories);
+        }
+
+        if ($request->hasFile('product_image')) {
+            $imagePath = $request->file('product_image')->store('assets/products', 'public');
+            
+            $image = Image::updateOrCreate(
+                ['product_id' => $product->id],
+                ['url' => $imagePath]
+            );
+
+            $imageUrl = Storage::url($imagePath);
+        } else {
+            $image = Image::where('product_id', $product->id)->first();
+            $imagePath = $image ? $image->url : null;
+        }
+
+        return response()->json([
+            'success' => true,
+            'imageUrl' => Storage::url($imagePath),
+        ]);
+    }
+
+    public function addProduct(Request $request)
+    {
+        // Валидация данных
+        $validatedData = $request->validate([
+            'insert_name' => 'required|string|max:255',
+            'product_desc' => 'nullable|string',
+            'insert_price' => 'required',
+            'gender' => 'required|in:man,woman',
+            'categories' => 'array|nullable',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // Создание нового продукта
+        $product = new Product();
+        $product->product_name = $validatedData['insert_name'];
+        $product->description = $validatedData['product_desc'];
+        $product->price = $validatedData['insert_price'];
+        $product->gender = $validatedData['gender'];
+        $product->save();
+
+        // Обработка изображения, если оно загружено
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('assets/products', 'public');
+
+            $image = new Image();
+            $image->product_id = $product->id;
+            $image->url = $imagePath;
+            $image->save();
+        }
+
+        // Обновление категорий продукта
+        if (isset($request->categories)) {
+            $product->categories()->sync($request->categories);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product added successfully!',
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $product = Product::find($id);
+
+        if ($product) {
+            $product->delete();
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Продукт не найден']);
+        }
+    }
+
+
 
 }
 

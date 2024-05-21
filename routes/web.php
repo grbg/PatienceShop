@@ -29,3 +29,13 @@ Route::get('/shop/woman', [ProductController::class, 'getWomanSection']);
 Route::post('/shop/filter', [ProductController::class, 'filterProducts'])->name('shop.filter');
 
 Route::get('/shop/{gender}/{category}', [ProductController::class, 'filterByCategory']);
+
+Route::get('product', [ProductController::class, 'indexProduct']);
+
+// Route::post('product/update/{id}', [ProductController::class, 'updateProduct'])->name('product_update');
+
+Route::post('/update-product', 'ProductController@updateProduct')->name('update.product');
+
+Route::post('/add-product', [ProductController::class, 'addProduct'])->name('addProduct');
+
+Route::delete('/products/{id}', [ProductController::class, 'destroy']);

@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ asset('css/market.css')}}">
+    <link rel="stylesheet" href="{{ asset('storage/css/market.css')}}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Project - Главная страница</title>
 </head>
@@ -52,10 +52,8 @@
             <div class="product">
                 <div class="product_image">
                     <?php
-                        $image = $images->where('product_id', $product->id)->first();
-                        if ($image) {
-                            $imageUrl = asset('assets/products/'.$image->url) ;
-                        } 
+                    $image = $images->where('product_id', $product->id)->first();
+                    $imageUrl = asset('storage/'.$image->url)
                     ?>
                     <img class="product_item" src="{{ $imageUrl }}">
                     <div class="size_block">
@@ -343,7 +341,7 @@
 
     </script>
     
-    <script src="js/genderSection.js"></script>
+    <script src="storage/js/genderSection.js"></script>
 
 </body>
 </html>
