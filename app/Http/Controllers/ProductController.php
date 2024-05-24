@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Image;
+use App\Models\Cart;
 use Illuminate\Support\Facades\DB;
 use App\Models\Category;
-use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use App\User; 
 
 class ProductController extends Controller
 {
@@ -16,8 +19,7 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
+    public function index() {
         $products = Product::all();
         $images = Image::all();
         $categories = Category::all();
@@ -44,11 +46,16 @@ class ProductController extends Controller
             ]);
         }
 
-        return view('shop', compact('products', 'images', 'categories'));
+        $carts = app()->call('App\Http\Controllers\CartController@index');
+
+        $sizes = app()->call('App\Http\Controllers\SizeController@getAllSizes');
+
+        $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
+
+        return view('shop', compact('products', 'images', 'categories', 'carts', 'sizes','total_price'));
     }
 
-    public function indexProduct()
-    {
+    public function indexProduct()  {
         $products = Product::all();
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
         $categories = Category::all();
@@ -96,8 +103,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function getAllProducts(Request $request)
-    {
+    public function getAllProducts(Request $request) {
         $products = Product::all();
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
 
@@ -111,8 +117,7 @@ class ProductController extends Controller
         return view('shop', compact('products', 'images', 'categories'));
     }
 
-    public function filterProducts(Request $request)
-    {
+    public function filterProducts(Request $request) {
         $category_id = $request->input('category_id');
         $section = $request->input('section');
 
@@ -137,8 +142,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function filterByCategory($gender, $category)
-{
+    public function filterByCategory($gender, $category) {
     // Получить ID категории по имени (если нужно)
     $categoryModel = Category::where('id', $category)->first();
     if (!$categoryModel) {
@@ -175,7 +179,7 @@ class ProductController extends Controller
         'categories' => $categories,
         'product_categories' => $product_categories
     ]);
-}
+    }
 
     public function updateProduct(Request $request) {
          $validatedData = $request->validate([
@@ -219,8 +223,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function addProduct(Request $request)
-    {
+    public function addProduct(Request $request) {
         // Валидация данных
         $validatedData = $request->validate([
             'insert_name' => 'required|string|max:255',
@@ -260,8 +263,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function destroy($id)
-    {
+    public function destroy($id) {
         $product = Product::find($id);
 
         if ($product) {
@@ -271,8 +273,6 @@ class ProductController extends Controller
             return response()->json(['success' => false, 'message' => 'Продукт не найден']);
         }
     }
-
-
 
 }
 

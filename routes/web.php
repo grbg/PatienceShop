@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CartController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,3 +40,13 @@ Route::post('/update-product', 'ProductController@updateProduct')->name('update.
 Route::post('/add-product', [ProductController::class, 'addProduct'])->name('addProduct');
 
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+Route::get('/profile', function() {
+    return view('profile');
+});
+
+Route::post('/cart/add', [CartController::class, 'addProductInCart']);
+
+Route::get('/cart/confim', function() {
+    return view('cart');
+});

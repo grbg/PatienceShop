@@ -3,6 +3,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ asset('storage/css/market.css')}}">
+    <link rel="stylesheet" href="{{ asset('storage/css/nav.css')}}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Project - Главная страница</title>
 </head>
@@ -49,7 +50,7 @@
 
         <div class="catalog_block" id="product-list">
             @foreach ($products as $product)
-            <div class="product">
+            <div class="product" data-product-id="{{ $product->id }}">
                 <div class="product_image">
                     <?php
                     $image = $images->where('product_id', $product->id)->first();
@@ -59,11 +60,9 @@
                     <div class="size_block">
                         <p>Выберите размер</p>
                         <div class="size_container">
-                            <button class="size_button">XS</button>
-                            <button class="size_button">S</button>
-                            <button class="size_button">M</button>
-                            <button class="size_button">L</button>
-                            <button class="size_button">XL</button>
+                            @foreach ($sizes as $size)
+                            <button data-size-id="{{ $size->id }}" class="size_button">{{ $size->size }}</button>
+                            @endforeach
                         </div>
                     </div>
                     <div class="product_status">
@@ -98,50 +97,56 @@
                         <p>Корзина товаров</p>
                     </div>
                     <div class="cart_cross">
-                        <img src="/assets/header/cross_black.png">
+                        <img src="{{ asset('storage/assets/ui_icons/cross_black.png') }}">
                     </div>
                 </div>
                 <div class="cart_container">
+                    @if (auth()->user())
+                    @foreach ($carts as $cart_item)
+                    @if (auth()->user()->id == $cart_item->user_id)
+                    @foreach ($products as $product) 
+                    @if ($product->id == $cart_item->product_id)
                     <div class="cart_item">
-                        <img src="/assets/products/0000001.png">
+                        <?php
+                        $image = $images->where('product_id', $product->id)->first();
+                        $imageUrl = asset('storage/'.$image->url);
+                        ?>
+                        <img src="{{ $imageUrl }}">
                         <div class="cart_item_desc">
-                            <p class="cart_item_name">БЕЖЕВЫЕ БРЮКИ С НАКЛАДНЫМИ КАРМАНАМИ</p>
-                            <p class="article">Артикул: 0000001</p>
-                            <div class="cart_item_color_container">
-                                <p class="cart_item_color_text">Цвет</p>
-                                <div class="cart_item_color"></div>
+                            <p class="cart_item_name">{{ $product->product_name }}</p>
+                            <p class="article">Артикул: {{ $product->id }}</p>
+                            <div class="product_quantity_container">
+                                <p class="cart_item_count">Количество товара:  </p>
+                                <input id="product_quantity" type="number" name="product_quantity" value="{{ $cart_item->quantity}}">
                             </div>
-                            <p class="cart_item_count">Количество товара</p>
+                            <div class="product_size_container">
+                            <p>Размер</p>
+                            @foreach($sizes as $size)
+                            @if ($cart_item->size_id == $size->id)
+                            <p class="cart_product_size">{{ $size->size }}</p>
+                            @endif
+                            @endforeach
+                            </div>
                             <div class="cart_item_footer">
-                                <p class="cart_item_price">15 000 p</p>
+                                <p class="cart_item_price">{{ $product->price }} ₽</p>
                                 <div class="cart_item_buttons">
-                                    <img class="" src="/assets/header/favorite.png">
-                                    <img class="" src="/assets/header/trash.png">
+                                    <img class="" src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
+                                    <img class="" src="{{ asset('storage/assets/ui_icons/trash.png') }}">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="cart_item">
-                        <img src="/assets/products/0000001.png">
-                        <div class="cart_item_desc">
-                            <p class="cart_item_name">БЕЖЕВЫЕ БРЮКИ С НАКЛАДНЫМИ КАРМАНАМИ</p>
-                            <p class="article">Артикул: 0000001</p>
-                            <div class="cart_item_color_container">
-                                <p class="cart_item_color_text">Цвет</p>
-                                <div class="cart_item_color"></div>
-                            </div>
-                            <p class="cart_item_count">Количество товара</p>
-                            <div class="cart_item_footer">
-                                <p class="cart_item_price">15 000 p</p>
-                                <div class="cart_item_buttons">
-                                    <img class="" src="/assets/header/favorite.png">
-                                    <img class="" src="/assets/header/trash.png">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endif
+                    @endforeach
+                    @endif
+                    @endforeach
+                    @endif
                 </div>
                 <div class="cart_footer">
+                    <div class="cart_total_price">
+                        <p class="total_price_label">Итоговая цена: </p>
+                        <p class="total_price">{{ $total_price }} ₽</p>
+                    </div>
                     <button class="_button">Оформить заказ</button>
                 </div>
         </div>
@@ -340,6 +345,44 @@
 
 
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".size_button").forEach(button => {
+                button.addEventListener("click", function () {
+                    const productId = this.closest(".product").dataset.productId;
+                    console.log(productId);
+                    const sizeId = this.dataset.sizeId;
+                    console.log(sizeId);
+
+                    fetch('/cart/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            product_id: productId,
+                            size_id: sizeId,
+                            quantity: 1
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert("Product added to cart!");
+                            var cart = document.querySelector('cart_container')
+
+                        } else {
+                            alert("Failed to add product to cart.");
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            });
+        });
+    </script>
+
     
     <script src="storage/js/genderSection.js"></script>
 
