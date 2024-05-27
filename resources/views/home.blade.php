@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+    <link rel="stylesheet" href="{{ asset('storage/css/home.css') }}">
+    <link rel="stylesheet" href="{{ asset('storage/css/nav.css') }}">
     <title>Project - Главная страница</title>
 </head>
 <body>
     <header>
         <div class="gender">
-            <p class="gender_label">Женское</p>
-            <p class="gender_label">Мужское</p>
+            <a href="{{ route('shop') }}"><p class="gender_label">Каталог</p></a>
         </div>
         <div class="logo">
-            <p class="logo_label">Patience</p>
+            <a href="{{ route('home') }}"><p class="logo_label">Patience</p></a>
         </div>
         <div class="account">
             <img class="account_button" src="{{ asset('assets/ui_icons/favorite.png') }}">
@@ -40,7 +40,7 @@
                     <?php
                         $image = $images->where('product_id', $product->id)->first();
                         if ($image) {
-                            $imageUrl = asset('assets/products/'.$image->url) ;
+                            $imageUrl = asset('storage/'.$image->url) ;
                         } 
                     ?>
                     <img class="product_item" src="{{ $imageUrl }}">
@@ -64,7 +64,7 @@
                     </p>
                     <div class="product_btn">
                         <p>Добавить к корзину</p>
-                        <img src="{{ asset('assets/ui_icons/favorite.png') }}">
+                        <img src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
                     </div>
                 </div>
             </div>
@@ -131,11 +131,11 @@
         <h1 class="product_block_label">Популярные категории</h1>
         <div class="popular_categories">
             <div class="category">
-                <img src="./assets/home/category_1.jpg">
+                <img src="storage/assets/posters/category_1.jpg">
                 <p class="category_title">CASUAL</p>
             </div>
             <div class="category">
-                <img src="./assets/home/category_2.jpg">
+                <img src="storage/assets/posters/category_2.jpg">
                 <p class="category_title">STREETWEAR</p>
             </div>
         </div>

@@ -13,7 +13,7 @@ class SizeController extends Controller
     }
 
     public function getAllSizes() {
-        $size = Size::all();
-        return $size;
+        return Size::all();
     }
+
 }

@@ -8,6 +8,7 @@ use App\Models\Image;
 use App\Models\Cart;
 use Illuminate\Support\Facades\DB;
 use App\Models\Category;
+use App\Models\Size;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use App\User; 
@@ -55,6 +56,14 @@ class ProductController extends Controller
         return view('shop', compact('products', 'images', 'categories', 'carts', 'sizes','total_price'));
     }
 
+    public function getProductsByIds($ids)  {
+        return Product::whereIn('id', $ids)->get();
+    }
+
+    public function getProductById($id) {
+        return Product::find($id);
+    }
+
     public function indexProduct()  {
         $products = Product::all();
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
@@ -78,7 +87,7 @@ class ProductController extends Controller
         //     $product->categories = $product_categories;
         // }
 
-        return view('product', compact('products', 'images', 'categories', 'product_category'));
+        return view('manager', compact('products', 'images', 'categories', 'product_category'));
     }
 
     public function getManSection(Request $request) {
@@ -87,8 +96,8 @@ class ProductController extends Controller
         $categories = Category::all();
 
         return response()->json([
-                'products' => $products,
-                'images' => $images
+            'products' => $products,
+            'images' => $images
         ]);
     }
 
@@ -98,8 +107,8 @@ class ProductController extends Controller
         $categories = Category::all();
 
         return response()->json([
-                'products' => $products,
-                'images' => $images
+            'products' => $products,
+            'images' => $images
         ]);
     }
 
@@ -125,6 +134,8 @@ class ProductController extends Controller
             $query = Product::where('category', 'man');
         } elseif ($section == 'woman') {
             $query = Product::where('category', 'woman');
+        } elseif ($section == 'all') {
+            $query = Product::all();
         }
 
         if ($category_id) {
@@ -143,42 +154,43 @@ class ProductController extends Controller
     }
 
     public function filterByCategory($gender, $category) {
-    // Получить ID категории по имени (если нужно)
-    $categoryModel = Category::where('id', $category)->first();
-    if (!$categoryModel) {
-        return response()->json(['products' => [], 'images' => []]);
-    }
-    if ($gender === 'all') {
-        $products = Product::whereHas('categories', function($query) use ($categoryModel) {
-                           $query->where('category_id', $categoryModel->id);
-                       })
-                       ->get();
+        // Получить ID категории по имени (если нужно)
+        $categoryModel = Category::where('id', $category)->first();
+        
+        if (!$categoryModel) {
+            return response()->json(['products' => [], 'images' => []]);
+        }
+        if ($gender === 'all') {
+            $products = Product::whereHas('categories', function($query) use ($categoryModel) {
+               $query->where('category_id', $categoryModel->id);
+               })
+               ->get();
 
+            $images = Image::whereIn('product_id', $products->pluck('id'))->get();
+
+            return response()->json(['products' => $products, 'images' => $images]);
+        }
+    
+        $products = Product::where('gender', $gender)
+           ->whereHas('categories', function($query) use ($categoryModel) {
+           $query->where('category_id', $categoryModel->id);
+           })
+           ->get();
+
+        // Получение изображений для продуктов
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
 
-        return response()->json(['products' => $products, 'images' => $images]);
-    }
-    
-    $products = Product::where('gender', $gender)
-                       ->whereHas('categories', function($query) use ($categoryModel) {
-                           $query->where('category_id', $categoryModel->id);
-                       })
-                       ->get();
-
-    // Получение изображений для продуктов
-    $images = Image::whereIn('product_id', $products->pluck('id'))->get();
-
-    $categories = Category::all();
+        $categories = Category::all();
 
         
-    $product_categories = DB::table('category_product')->get();
+        $product_categories = DB::table('category_product')->get();
 
-    return response()->json([
-        'products' => $products, 
-        'images' => $images,
-        'categories' => $categories,
-        'product_categories' => $product_categories
-    ]);
+        return response()->json([
+            'products' => $products, 
+            'images' => $images,
+            'categories' => $categories,
+            'product_categories' => $product_categories
+        ]);
     }
 
     public function updateProduct(Request $request) {
@@ -274,6 +286,24 @@ class ProductController extends Controller
         }
     }
 
+    public function show($id)   {
+        $product = Product::findOrFail($id);
+        $products = Product::all();
+        $images = Image::all();
+        $sizes = Size::all();
+        
+        $productCategories = DB::table('category_product')
+            ->where('product_id', $id)
+            ->pluck('category_id');
+            
+        $categories = Category::whereIn('id', $productCategories)->first();
+
+        $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
+
+        $carts = app()->call('App\Http\Controllers\CartController@index');
+        
+        return view('product', compact('product','products', 'images', 'sizes', 'categories', 'total_price', 'carts'));
+    }
 }
 
 

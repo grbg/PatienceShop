@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{ asset('storage/css/nav.css')}}">
-    <link rel="stylesheet" href="{{ asset('storage/css/product_upload.css')}}">
+    <link rel="stylesheet" href="{{ asset('storage/css/product.css')}}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="_token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Document</title>
 </head>
 <body>
@@ -17,13 +17,12 @@
                 <div class="third"></div>
             </div>
             <div class="gender">
-                <p class="gender_label" id="woman-section-btn">Женское</p>
-                <p class="gender_label" id="man-section-btn">Мужское</p>
+                <a href="{{ route('shop') }}"><p class="gender_label" id="woman-section-btn">Каталог</p></a>
             </div>
         </div>
 
         <div class="logo">
-            <p class="logo_label">Patience</p>
+            <a href="{{ route('home') }}"><p class="logo_label">Patience</p></a>
         </div>
 
         <div class="account_block">
@@ -36,258 +35,133 @@
             <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
         </div>
     </header>
-
-    <div class="admin_button_container">
-        <div id="add_button" class="admin_button">
-            <p>Добавить товар</p>
+    
+    <div class="product_container">
+        <div class="product_img_container">
+            @foreach($images as $image)
+            @if ($image->product_id == $product->id)
+            <?php
+                $image = $images->where('product_id', $product->id)->first();
+                $imageUrl = asset('storage/'.$image->url);
+            ?>
+            <img src="{{ $imageUrl }}">
+            @endif
+            @endforeach
+        </div>
+        <div class="product_info" data-product-id="{{ $product->id }}">
+            <div class="breadcrumbs">
+                <p>Каталог</p>
+                <p class="line"> — </p>
+                <p>{{ $categories->category_name}}</p>
+                <p class="line"> — </p>
+                <span >{{ $product->product_name }}</span>
+            </div>
+            <div class="product_label">
+                <p>{{ $product->product_name }}</p>
+            </div>
+            <div class="product_desc">
+                <p>{{ $product->description }}</p>
+            <div class="size_label">
+                <p>Размер</p>
+            </div>
+            <div class="size_container">
+                @foreach($sizes as $size)
+                <div data-size-id="{{ $size->id }}" class="size_item">
+                    <p>{{ $size->size }}</p>
+                </div>
+                @endforeach
+            </div>
+            <div class="product_price">
+                <p>{{ $product->price }} ₽</p>
+            </div>
+            <div class="button_container">
+                <button id="add_cart" class="_button">Добавить в корзину</button>
+            </div>
         </div>
     </div>
 
-    <div class="filter_container">
-        <div class="categories_container">
-        @foreach ($categories as $category)
-            <button class="category-filter category" data-category="{{ $category->id }}">{{ $category->category_name }}</button>
-        @endforeach
+    <div class="cart_block">
+        <div class="cart_menu">
+            <div class="cart_label">
+                <p>Корзина товаров</p>
+            </div>
+            <div class="cart_cross">
+                <img src="{{ asset('storage/assets/ui_icons/cross_black.png') }}">
+            </div>
         </div>
-        <div class="gender_container">
-            <div id="man" class="product_gen_option_val active">Мужской</div>
-            <div id="woman" class="product_gen_option_val">Женский</div>
-        </div>
-    </div>
-
-        <div class="product_container">
-            @foreach ($products as $product)
-            <form class="product" data-product="{{ $product->id}}" >
-                @csrf
-                <div class="product_image">
-                    <?php
+        <div class="cart_container">
+            @if (auth()->user())
+            @foreach ($carts as $cart_item)
+            @if (auth()->user()->id == $cart_item->user_id)
+            @foreach ($products as $product) 
+            @if ($product->id == $cart_item->product_id)
+            <div class="cart_item" data-product-id="{{ $cart_item->product_id }}">
+                <?php
                     $image = $images->where('product_id', $product->id)->first();
-                    $imageUrl = asset('storage/'.$image->url)
-                    ?>
-                    <label for="upload_image_{{ $product->id }}">
-                        <img src="{{ $imageUrl }}" alt="Product Image">
-                        <div class="upload_image">
-                            <p>Изменить фото</p>
+                    $imageUrl = asset('storage/'.$image->url);
+                ?>
+                <img src="{{ $imageUrl }}">
+                <div class="cart_item_desc">
+                    <p class="cart_item_name">{{ $product->product_name }}</p>
+                    <p class="article">Артикул: {{ $product->id }}</p>
+                    <div class="product_quantity_container">
+                        <p class="cart_item_count">Количество товара:  </p>
+                        <div class="counter">
+                            <div class="counter_minus">
+                                <p>-</p>
+                            </div>
+                            <div class="counter_value">
+                                <p id="quantity_value">{{ $cart_item->quantity }}</p>
+                            </div>
+                            <div class="counter_plus">
+                                <p>+</p>
+                            </div>
+                            <input hidden id="product_quantity" class="product_quantity" type="number" name="product_quantity" value="{{ $cart_item->quantity }}}">
                         </div>
-                    </label>
-                    <input type="file" id="upload_image_{{ $product->id }}" name="product_image" style="display: none;">
-                </div>
-                <div class="input_wrapper">
-                    <p class="product_input_label">Имя товара</p>
-                    <input id="product_name" type="text" name="product_name" class="product_input" value="{{ $product->product_name }}">
-                </div>
-                <div class="input_wrapper">
-                    <p class="product_input_label">Описание</p>
-                    <textarea type="text" name="product_desc" class="product_input product_message">{{ $product->description }}</textarea>
-                </div>
-                <div class="input_wrapper">
-                    <p class="product_input_label">Цена</p>
-                    <input type="text" name="product_price" class="product_input" value="{{ $product->price }}">
-                </div>
-                <div class="input_wrapper">
-                    <p class="product_input_label">Пол</p>
-                    <div class="product_gen_option">
-                        @if ($product->gender == 'man')
-                            <div id="man" class="product_gen_option_val active">Мужской</div>
-                            <div id="woman" class="product_gen_option_val">Женский</div>
-                        @else
-                            <div id="man" class="product_gen_option_val">Мужской</div>
-                            <div id="woman" class="product_gen_option_val active">Женский</div>
-                        @endif
                     </div>
-                </div>
-                <div class="input_wrapper">
-                    <div class="category_selector">
-                    <p class="product_input_label">Категория</p>
-                    <div class="category_selected">
-                        <div id="product_category" type="text" name="product_category" class="product_input"> + </div>
-                        @foreach ($product_category as $pr)
-                        @if ($pr->product_id == $product->id)
-                            @foreach ($categories as $category)
-                                @if ($pr->category_id == $category->id)
-                                <div class="category-filter category selected" data-category="{{ $category->id }}">{{ $category->category_name }}</div>
-                                @endif
-                            @endforeach
-                        @endif
-                        @endforeach
-                    </div>
-                    <div class="category_add_selector">
-                        @foreach ($categories as $category)
-                            @php
-                            $exists = false;
-                            @endphp
-                            @foreach ($product_category as $pr)
-                                @if ($pr->category_id == $category->id && $pr->product_id == $product->id)
-                                    @php
-                                    $exists = true;
-                                    @endphp
-                                @endif
-                            @endforeach
-                            @if (!$exists)
-                                <div class="category-filter category" data-category="{{ $category->id }}">{{ $category->category_name }}</div>
+                    <div class="product_size_container">
+                        <p>Размер</p>
+                        @foreach($sizes as $size)
+                            @if ($cart_item->size_id == $size->id)
+                                <p class="cart_product_size">{{ $size->size }}</p>
                             @endif
                         @endforeach
                     </div>
+                    <div class="cart_item_footer">
+                        <p class="cart_item_price">{{ $product->price }} ₽</p>
+                        <div class="cart_item_buttons">
+                            <img class="favorite_icon" src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
+                            <img class="trash_icon" src="{{ asset('storage/assets/ui_icons/trash.png') }}">
+                        </div>
                     </div>
                 </div>
-                <div class="product_button_container">
-                    <div class="delete_button" data-product-id="${product.id}">Удалить</div>
-                    <button  type="submit" id="product_upload_container">Обновить</button>
-                </div>
-            </form>
+            </div>
+            @endif
             @endforeach
+            @endif
+            @endforeach
+            @endif
         </div>
-
-        <div class="modal_background">
-            <div class="insert_modal">
-                <h1>Добавление товара</h1>
-                <form class="insert_modal_form"  method="post">
-                    @csrf
-                    <div class="input_wrapper">
-                        <p class="product_input_label">Название товара</p>
-                        <input class="input_product modal_input" name="insert_name">
-                    </div>
-                    <div class="input_wrapper">
-                        <p class="product_input_label">Описание товара</p>
-                        <textarea type="text" name="product_desc" class="product_input product_message modal_input_textarea"></textarea>
-                    </div>
-                    <div class="input_wrapper">
-                        <p class="product_input_label">Цена</p>
-                        <input class="input_product modal_input" name="insert_price">
-                    </div>
-                    <div class="input_wrapper">
-                        <p class="product_input_label">Пол</p>
-                        <div class="product_gen_option">
-                            <div id="man" class="product_gen_option_val active">Мужской</div>
-                            <div id="woman" class="product_gen_option_val">Женский</div>
-                        </div>
-                    </div>
-                    <div class="input_wrapper">
-                        <div class="category_selector">
-                            <p class="product_input_label">Категория</p>
-                            <div class="category_selected">
-                                <div id="product_category" type="text" name="product_category" class="product_input"> + </div>
-                                @foreach ($product_category as $pr)
-                                    @if ($pr->product_id == $product->id)
-                                        @foreach ($categories as $category)
-                                            @if ($pr->category_id == $category->id)
-                                                <div class="category-filter category selected" data-category="{{ $category->id }}">{{ $category->category_name }}</div>
-                                            @endif
-                                        @endforeach
-                                    @endif
-                                @endforeach
-                                </div>
-                                <div class="category_add_selector">
-                                @foreach ($categories as $category)
-                                    @php
-                                        $exists = false;
-                                    @endphp
-                                    @foreach ($product_category as $pr)
-                                        @if ($pr->category_id == $category->id && $pr->product_id == $product->id)
-                                            @php
-                                                $exists = true;
-                                            @endphp
-                                        @endif
-                                    @endforeach
-                                    @if (!$exists)
-                                        <div class="category-filter category" data-category="{{ $category->id }}">{{ $category->category_name }}</div>
-                                    @endif
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                    <div class="upload_input">
-                        <label for="upload_image">
-                                <div class="add_img_button">
-                                    <div class="upload_img_icon_container">
-                                        <img src="{{ asset('storage/assets/ui_icons/upload.png') }}">
-                                        <p>Добавить фото</p>
-                                    </div>
-                                </div>
-                        </label>
-                        <input style="display: none" id="upload_image" type="file" name="image">
-                    </div>
-                    <div class="input_button">
-                        <button  type="submit" id="add_product_button">Обновить</button>
-                    </div>
-                </form>
+        <div class="cart_footer">
+            <div class="cart_total_price">
+                <p class="total_price_label">Итого </p>
+                <p class="total_price">{{ $total_price }} ₽</p>
             </div>
+            <a href="{{ route('order.confirm') }}"><button class="_button">Оформить заказ</button></a>
         </div>
-
-        <div class="success_modal">
-            <div class="time_line"></div>
-            <div class="success_message">
-                <h1>Товар успешно добавлен</h1>
-                <p>Теперь все ваши покупки будут отображаться в корзине</p>
-            </div>
-        </div>
-
-        <div class="cart_block">
-                <div class="cart_menu">
-                    <div class="cart_label">
-                        <p>Корзина товаров</p>
-                    </div>
-                    <div class="cart_cross">
-                        <img src="/assets/header/cross_black.png">
-                    </div>
-                </div>
-                <div class="cart_container">
-                    <div class="cart_item">
-                        <img src="/assets/products/0000001.png">
-                        <div class="cart_item_desc">
-                            <p class="cart_item_name">БЕЖЕВЫЕ БРЮКИ С НАКЛАДНЫМИ КАРМАНАМИ</p>
-                            <p class="article">Артикул: 0000001</p>
-                            <div class="cart_item_color_container">
-                                <p class="cart_item_color_text">Цвет</p>
-                                <div class="cart_item_color"></div>
-                            </div>
-                            <p class="cart_item_count">Количество товара</p>
-                            <div class="cart_item_footer">
-                                <p class="cart_item_price">15 000 p</p>
-                                <div class="cart_item_buttons">
-                                    <img class="" src="/assets/header/favorite.png">
-                                    <img class="" src="/assets/header/trash.png">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="cart_item">
-                        <img src="/assets/products/0000001.png">
-                        <div class="cart_item_desc">
-                            <p class="cart_item_name">БЕЖЕВЫЕ БРЮКИ С НАКЛАДНЫМИ КАРМАНАМИ</p>
-                            <p class="article">Артикул: 0000001</p>
-                            <div class="cart_item_color_container">
-                                <p class="cart_item_color_text">Цвет</p>
-                                <div class="cart_item_color"></div>
-                            </div>
-                            <p class="cart_item_count">Количество товара</p>
-                            <div class="cart_item_footer">
-                                <p class="cart_item_price">15 000 p</p>
-                                <div class="cart_item_buttons">
-                                    <img class="" src="/assets/header/favorite.png">
-                                    <img class="" src="/assets/header/trash.png">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cart_footer">
-                    <button class="_button">Оформить заказ</button>
-                </div>
     </div>
 
-
-        <div class="burger_menu">
-            <div class="cross_button">
-                <img src="{{ asset('assets/ui_icons/cross.png') }}">
-            </div>
-            <p class="menu_item">Новинки</p>
-            <p class="menu_item">Популярное</p>
-            <p class="menu_item">Аксессуары</p>
-            <p class="menu_item">Акции</p>
+    <div class="burger_menu">
+        <div class="cross_button">
+            <img src="{{ asset('assets/ui_icons/cross.png') }}">
         </div>
+        <p class="menu_item">Новинки</p>
+        <p class="menu_item">Популярное</p>
+        <p class="menu_item">Аксессуары</p>
+        <p class="menu_item">Акции</p>
+    </div>
 
-        <div class="login_block">
+    <div class="login_block">
             <div class="login_button_container">
                 <div class="switch_buttons">
                     <button class="switch login">Вход</button>
@@ -330,151 +204,357 @@
                     <p class="login_description">Регистрируясь, Вы присоединяетесь к Правилам работы магазина и подтверждаете, что ознакомлены с Политикой конфиденциальности</p>
                 </form>        
             </div>
-        </div>
+    </div>
 
-        <div class="success_modal">
-            <div class="time_line"></div>
-            <div class="success_message">
-                <h1>Пользователь успешно зарегистрирован!</h1>
-                <p>Теперь все ваши покупки будут отображаться в корзине</p>
+    <div class="modal_container">
+        <div class="modal_background">
+            <div class="success_modal">
+                <div class="time_line"></div>
+                <div class="success_message">
+                    <h1>Пользователь успешно зарегистрирован!</h1>
+                    <p>Теперь все ваши покупки будут отображаться в корзине</p>
+                </div>
             </div>
         </div>
 
-        <script src="js/nav.js"></script>
-        <script src="storage/js/productUpdate.js"></script>
-        <script src="storage/js/admin_filter_product.js"></script>
+        <div class="add_product_modal">
+            <p>Товар добавлен в корзину</p>
+        </div>
+    </div>
 
-        <script>
-            var textarea = document.querySelector('textarea');
+    <script>
+        const menu_btn = document.querySelector('.menu_button');
+        const cross_btn = document.querySelector('.cross_button');
 
-            function autoResize() {
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-            }
+        menu_btn.addEventListener('click', function() {
+            var burger = document.querySelector('.burger_menu');
 
-            if (textarea.attachEvent) {
-                textarea.attachEvent('oninput', autoResize); // Для устаревших версий браузеров
-            } else {
-                textarea.addEventListener('input', autoResize);
-            }
-        </script>
+            burger.classList.toggle('active');
+        });
 
-        <script>
-            
+        cross_btn.addEventListener('click', function() {
+            var burger = document.querySelector('.burger_menu');
 
-            document.querySelectorAll('.product_gen_option').forEach((option) => {
-                var male_btn = option.querySelector('#man');
-                var female_btn = option.querySelector('#woman');
+            burger.classList.toggle('active');
+        });
+    </script>
 
-                male_btn.addEventListener('click', function(event) {
-                    male_btn.classList.add('active');
-                    female_btn.classList.remove('active');
-                });
+    <script>
+        const login = document.querySelector('.login');
+        const reg = document.querySelector('.register');
+        const modal_win = document.querySelector('.login_form');
+        const login_form = document.querySelector('.login_form');
+        const registration_form = document.querySelector('.registration');
+        let elementsAdded = false;
 
-                female_btn.addEventListener('click', function(event) {
-                    female_btn.classList.add('active');
-                    male_btn.classList.remove('active');
-                });
+        login.addEventListener('click', function() {
+            var line = document.querySelector('.toggle_line');
+            line.classList.remove('switched');
+            login_form.style.display = 'block';
+            registration_form.style.display = 'none';
+        });
+
+        reg.addEventListener('click', function() {
+            var line = document.querySelector('.toggle_line');
+            line.classList.add('switched');
+            login_form.style.display = 'none';
+            registration_form.style.display = 'block';
+        });
+    </script>
+
+    <script>
+        const account_btn = document.querySelector('.account');
+        let burger = document.querySelector('.login_block');
+        const acc_cross_btn = document.querySelector('.cross_btn');
+
+        account_btn.addEventListener('click', function() {
+            burger.classList.toggle('active');
+        });
+
+        acc_cross_btn.addEventListener('click', function() {
+            burger.classList.toggle('active');
+            const errorElements = document.querySelectorAll('.error');
+            errorElements.forEach(element => {
+                element.textContent = '';
             });
-            
-        </script>
-
-        <script>
-            // var category_btn = document.querySelectorAll('#product_category');
-            // const category_selector = document.querySelectorAll('.category_add_selector');
-            // const selected = document.querySelector('.category_selected');
-
-            // category_btn.forEach((button) => {
-            //     button.addEventListener( 'click', function(event) {
-            //     category_selector.classList.toggle('active');
-            //     })
-            // });
-
-            
-            document.querySelectorAll('.category_selector').forEach((selector) => {
-                var selected = selector.querySelector('.category_selected');    
-                var category_btn = selected.querySelector('#product_category');
-                var add = selector.querySelector('.category_add_selector');
-
-                category_btn.addEventListener( 'click', function(event) {
-                    add.classList.toggle('active');
-                })
-
-                selector.querySelectorAll(".category-filter").forEach((button) => {
-                button.addEventListener("click", function () {
-                    if (button.classList.contains('selected')) {
-                        button.classList.remove('selected');
-                        add.appendChild(button);
-                        //add.classList.toggle('active');
-                    }
-                    else {
-                        selected.appendChild(button);
-                        button.classList.add('selected');
-                        add.classList.toggle('active');
-                    }
-                })});
-                });
-            
-
-        </script>
-
-        <script>
-            const add_button = document.getElementById('add_button');
-            const insert_modal = document.querySelector('.modal_background');
-
-            add_button.addEventListener("click", function () {
-                insert_modal.style.display = "block";
+            const inputElements = document.querySelectorAll('._input');
+            inputElements.forEach(element => {
+                element.style.borderBottom = '1px solid rgb(165, 165, 165)';
             });
+        });
+    </script>
 
-            insert_modal.addEventListener("click", function () {
-                if (event.target === this) {
-                    this.style.display = "none";
-                }
-            });
-        </script>
-        
-        <script>    
-            document.querySelector('.insert_modal_form').addEventListener('submit', function(e) {
-            e.preventDefault();
+    <script>
+        const cart_btn = document.querySelector('.shoppingBag');
+        let cart = document.querySelector('.cart_block');
+        const cart_cross_btn = document.querySelector('.cart_cross');
 
-            const formData = new FormData(this);            
-            const gender = insert_modal.querySelector(".product_gen_option_val.active").id;
-            console.log(gender);
-            formData.append("gender", gender);
+        cart_btn.addEventListener('click', function() {
+            
 
-            fetch('/add-product', {
+            cart.classList.toggle('active');
+        });
+
+        cart_cross_btn.addEventListener('click', function() {
+
+            cart.classList.toggle('active');
+        });
+
+        function submitForm() {
+            event.preventDefault();
+
+            let form = document.querySelector('.registration');
+            let formData = new FormData(form);
+
+            fetch('/registration', {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                }
             })
             .then(response => response.json())
             .then(data => {
-            if (data.success) {
-                insert_modal.style.display = 'none';
-                const successModal = document.querySelector('.success_modal');
-                var timeLine = document.querySelector('.time_line');
 
-                successModal.classList.add('active');
-                timeLine.classList.add('active');
-                // Через 5 секунд скрываем модальное окно
-                setTimeout(() => {
-                    successModal.classList.remove('active');
-                    timeLine.classList.remove('active');
-                }, 3000);
-                this.reset();
-            } else {
-                alert('Ошибка при добавлении товара.');
-            }
+                document.querySelector('input[name="name"]').style.borderBottom = '1px solid rgb(165, 165, 165)';
+                document.querySelector('input[name="phone"]').style.borderBottom = '1px solid rgb(165, 165, 165)';
+                document.querySelector('input[name="email"]').style.borderBottom = '1px solid rgb(165, 165, 165)';
+
+                if (data.errors) {
+                    if (data.errors.name) {
+                        document.getElementById('name-error').textContent = data.errors.name[0];
+                        document.querySelector('input[name="name"]').style.borderBottom = '1px solid red';
+                    }
+                    if (data.errors.phone) {
+                        document.getElementById('phone-error').textContent = data.errors.phone[0];
+                        document.querySelector('input[name="phone"]').style.borderBottom = '1px solid red';
+                    }
+                    if (data.errors.email) {
+                        document.getElementById('email-error').textContent = data.errors.email[0];
+                        document.querySelector('input[name="email"]').style.borderBottom = '1px solid red';
+                    }
+                } else if (data.success) {
+                    const successModal = document.querySelector('.success_modal');
+                    var timeLine = document.querySelector('.time_line');
+                    const login_block = document.querySelector('.login_block');
+                    const modal_background = document.querySelector('.modal_background');
+
+                    modal_background.style.display = 'block';
+                    successModal.classList.add('active');
+                    timeLine.classList.add('active');
+                    login_block.classList.remove('active');
+                    // Через 5 секунд скрываем модальное окно
+                    setTimeout(() => {
+                        successModal.classList.remove('active');
+                        timeLine.classList.remove('active');
+                    }, 3000);
+                    form.reset();
+                }
             })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка при добавлении товара)))');
+            .catch((error) => {
+                console.error('Error:', error);
             });
-            });
-        </script>
+        }
 
+
+
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("add_cart").addEventListener('click', function() {
+                console.log("+");
+                var sizeId =  document.querySelector(".selected").dataset.sizeId;
+                var productId = document.querySelector(".product_info").dataset.productId;
+
+                    fetch('/cart/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            product_id: productId,
+                            size_id: sizeId,
+                            quantity: 1
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const add_modal = document.querySelector('.add_product_modal');
+                            updateCart(data.cart);
+                            add_modal.style.display = 'block';
+                            setTimeout(() => {
+                                add_modal.style.display = 'none';
+                            }, 3000);
+                        } else {
+                            alert("Failed to add product to cart.");
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            });
+
+            function addEventListenersToCart() {
+                const trashIcons = document.querySelectorAll('.trash_icon');
+    
+                trashIcons.forEach(icon => {
+                    icon.addEventListener('click', function() {
+                    const productId = this.closest('.cart_item').dataset.productId;
+
+                    fetch(`/cart/${productId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Успешно удалено из базы данных
+                            this.closest('.cart_item').remove();
+                            document.querySelector('.total_price').textContent = data.totalPrice + ' ₽';
+                        } else {
+                            alert('Произошла ошибка при удалении товара.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка удаления товара:', error);
+                    });
+                });
+            });
+
+            const counterContainers = document.querySelectorAll(".counter");
+
+            counterContainers.forEach(function(container) {
+                const quantityValue = container.querySelector(".counter_value p");
+
+                // Обработчик нажатия на кнопку минус
+                container.querySelector(".counter_minus").addEventListener("click", function() {
+                    let quantity = parseInt(quantityValue.textContent);
+                    let quantity_input = container.querySelector(".product_quantity");
+                    if (quantity > 1) {
+                        quantity--;
+                        quantityValue.textContent = quantity;
+                        quantity_input.setAttribute('value', quantity);
+                        quantity_input.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                // Обработчик нажатия на кнопку плюс
+                container.querySelector(".counter_plus").addEventListener("click", function() {
+                    let quantity = parseInt(quantityValue.textContent);
+                    let quantity_input = container.querySelector(".product_quantity");
+                    quantity++;
+                    quantityValue.textContent = quantity;
+                    quantity_input.setAttribute('value', quantity);
+                    quantity_input.dispatchEvent(new Event('change'));
+                });
+            });
+
+            const quantityInputs = document.querySelectorAll('.product_quantity');
+
+            quantityInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const quantity = this.value;
+                    const productId = this.closest('.cart_item').dataset.productId;
+
+                    fetch('{{ route('cart.updateQuantity') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId,
+                            quantity: quantity
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.querySelector('.total_price').textContent = data.totalPrice + ' ₽';
+                        } else {
+                            alert('Произошла ошибка при обновлении количества.');
+                        }
+                    });
+                });
+            });
+            }
+
+            function updateCart(cart) {
+                const cartContainer = document.querySelector('.cart_container');
+                cartContainer.innerHTML = '';
+
+                cart.items.forEach(cartItem => {
+                    const cartItemElement = document.createElement('div');
+                    cartItemElement.classList.add('cart_item');
+                    cartItemElement.dataset.productId = cartItem.product_id;
+                    cartItemElement.innerHTML = `
+                        <img src="${cartItem.image_url}">
+                        <div class="cart_item_desc">
+                            <p class="cart_item_name">${cartItem.product_name}</p>
+                            <p class="article">Артикул: ${cartItem.product_id}</p>
+                            <div class="product_quantity_container">
+                                <p class="cart_item_count">Количество товара:  </p>
+                                <div class="counter">
+                                    <div class="counter_minus">
+                                        <p>-</p>
+                                    </div>
+                                    <div class="counter_value">
+                                        <p id="quantity_value">${cartItem.quantity}</p>
+                                    </div>
+                                    <div class="counter_plus">
+                                        <p>+</p>
+                                    </div>
+                                    <input hidden id="product_quantity" class="product_quantity" type="number" name="product_quantity" value="${cartItem.quantity}">
+                                </div>
+                            </div>
+                            <div class="product_size_container">
+                                <p>Размер</p>
+                                <p class="cart_product_size">${cartItem.size_name}</p>
+                            </div>
+                            <div class="cart_item_footer">
+                                <p class="cart_item_price">${cartItem.price} ₽</p>
+                                <div class="cart_item_buttons">
+                                    <img class="favorite_icon" src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
+                                    <img class="trash_icon" src="{{ asset('storage/assets/ui_icons/trash.png') }}">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    cartContainer.appendChild(cartItemElement);
+                });
+
+                document.querySelector('.total_price').textContent = cart.total_price + ' ₽';
+
+                addEventListenersToCart();
+            }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            addEventListenersToCart();
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sizeArea = document.querySelector('.size_container');
+
+            if (sizeArea) {
+                document.querySelectorAll('.size_item').forEach(size => {
+                    size.addEventListener('click', function() {
+                        var other = document.querySelectorAll('.size_item').forEach(other_size => 
+                        {
+                            other_size.classList.remove('selected');
+                        });
+
+                        this.classList.add('selected');
+                    });
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>

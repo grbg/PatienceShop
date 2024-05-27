@@ -22,7 +22,7 @@
         </div>
 
         <div class="logo">
-            <p class="logo_label">Patience</p>
+            <a href="{{ route('home') }}"><p class="logo_label">Patience</p></a>
         </div>
 
         <div class="account_block">
@@ -56,7 +56,9 @@
                     $image = $images->where('product_id', $product->id)->first();
                     $imageUrl = asset('storage/'.$image->url)
                     ?>
-                    <img class="product_item" src="{{ $imageUrl }}">
+                    <a href="{{ route('product.show', ['id' => $product->id])  }}">
+                        <img class="product_item" src="{{ $imageUrl }}">
+                    </a>
                     <div class="size_block">
                         <p>Выберите размер</p>
                         <div class="size_container">
@@ -106,7 +108,7 @@
                     @if (auth()->user()->id == $cart_item->user_id)
                     @foreach ($products as $product) 
                     @if ($product->id == $cart_item->product_id)
-                    <div class="cart_item">
+                    <div class="cart_item" data-product-id="{{ $cart_item->product_id }}">
                         <?php
                         $image = $images->where('product_id', $product->id)->first();
                         $imageUrl = asset('storage/'.$image->url);
@@ -117,7 +119,18 @@
                             <p class="article">Артикул: {{ $product->id }}</p>
                             <div class="product_quantity_container">
                                 <p class="cart_item_count">Количество товара:  </p>
-                                <input id="product_quantity" type="number" name="product_quantity" value="{{ $cart_item->quantity}}">
+                                <div class="counter">
+                                    <div class="counter_minus">
+                                        <p>-</p>
+                                    </div>
+                                    <div class="counter_value">
+                                         <p id="quantity_value">{{ $cart_item->quantity }}</p>
+                                    </div>
+                                    <div class="counter_plus">
+                                        <p>+</p>
+                                    </div>
+                                    <input hidden id="product_quantity" class="product_quantity" type="number" name="product_quantity" value="{{ $cart_item->quantity }}}">
+                                </div>
                             </div>
                             <div class="product_size_container">
                             <p>Размер</p>
@@ -130,8 +143,8 @@
                             <div class="cart_item_footer">
                                 <p class="cart_item_price">{{ $product->price }} ₽</p>
                                 <div class="cart_item_buttons">
-                                    <img class="" src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
-                                    <img class="" src="{{ asset('storage/assets/ui_icons/trash.png') }}">
+                                    <img class="favorite_icon" src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
+                                    <img class="trash_icon" src="{{ asset('storage/assets/ui_icons/trash.png') }}">
                                 </div>
                             </div>
                         </div>
@@ -144,10 +157,10 @@
                 </div>
                 <div class="cart_footer">
                     <div class="cart_total_price">
-                        <p class="total_price_label">Итоговая цена: </p>
+                        <p class="total_price_label">Итого </p>
                         <p class="total_price">{{ $total_price }} ₽</p>
                     </div>
-                    <button class="_button">Оформить заказ</button>
+                    <a href="{{ route('order.confirm') }}"><button class="_button">Оформить заказ</button></a>
                 </div>
         </div>
 
@@ -206,13 +219,23 @@
             </div>
         </div>
 
-        <div class="success_modal">
-            <div class="time_line"></div>
-            <div class="success_message">
-                <h1>Пользователь успешно зарегистрирован!</h1>
-                <p>Теперь все ваши покупки будут отображаться в корзине</p>
+        <div class="modal_container">
+            <div class="modal_background">
+                <div class="success_modal">
+                <div class="time_line"></div>
+                <div class="success_message">
+                    <h1>Пользователь успешно зарегистрирован!</h1>
+                    <p>Теперь все ваши покупки будут отображаться в корзине</p>
+                </div>
+                </div>
+            </div>
+
+            <div class="add_product_modal">
+                <p>Товар добавлен в корзину</p>
             </div>
         </div>
+        
+
     <script>
         const menu_btn = document.querySelector('.menu_button');
         const cross_btn = document.querySelector('.cross_button');
@@ -325,7 +348,9 @@
                     const successModal = document.querySelector('.success_modal');
                     var timeLine = document.querySelector('.time_line');
                     const login_block = document.querySelector('.login_block');
+                    const modal_background = document.querySelector('.modal_background');
 
+                    modal_background.style.display = 'block';
                     successModal.classList.add('active');
                     timeLine.classList.add('active');
                     login_block.classList.remove('active');
@@ -370,9 +395,12 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert("Product added to cart!");
-                            var cart = document.querySelector('cart_container')
-
+                            const add_modal = document.querySelector('.add_product_modal');
+                            updateCart(data.cart);
+                            add_modal.style.display = 'block';
+                            setTimeout(() => {
+                                add_modal.style.display = 'none';
+                            }, 3000);
                         } else {
                             alert("Failed to add product to cart.");
                         }
@@ -380,9 +408,151 @@
                     .catch(error => console.error('Error:', error));
                 });
             });
+
+            function updateCart(cart) {
+                const cartContainer = document.querySelector('.cart_container');
+                cartContainer.innerHTML = '';
+
+                cart.items.forEach(cartItem => {
+                    const cartItemElement = document.createElement('div');
+                    cartItemElement.classList.add('cart_item');
+                    cartItemElement.dataset.productId = cartItem.product_id;
+                    cartItemElement.innerHTML = `
+                        <img src="${cartItem.image_url}">
+                        <div class="cart_item_desc">
+                            <p class="cart_item_name">${cartItem.product_name}</p>
+                            <p class="article">Артикул: ${cartItem.product_id}</p>
+                            <div class="product_quantity_container">
+                                <p class="cart_item_count">Количество товара:  </p>
+                                <div class="counter">
+                                    <div class="counter_minus">
+                                        <p>-</p>
+                                    </div>
+                                    <div class="counter_value">
+                                        <p id="quantity_value">${cartItem.quantity}</p>
+                                    </div>
+                                    <div class="counter_plus">
+                                        <p>+</p>
+                                    </div>
+                                    <input hidden id="product_quantity" class="product_quantity" type="number" name="product_quantity" value="${cartItem.quantity}">
+                                </div>
+                            </div>
+                            <div class="product_size_container">
+                                <p>Размер</p>
+                                <p class="cart_product_size">${cartItem.size_name}</p>
+                            </div>
+                            <div class="cart_item_footer">
+                                <p class="cart_item_price">${cartItem.price} ₽</p>
+                                <div class="cart_item_buttons">
+                                    <img class="favorite_icon" src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
+                                    <img class="trash_icon" src="{{ asset('storage/assets/ui_icons/trash.png') }}">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    cartContainer.appendChild(cartItemElement);
+                });
+
+                document.querySelector('.total_price').textContent = cart.total_price + ' ₽';
+
+                addEventListenersToCart();
+            }
         });
+
+        function addEventListenersToCart() {
+            const trashIcons = document.querySelectorAll('.trash_icon');
+    
+            trashIcons.forEach(icon => {
+                icon.addEventListener('click', function() {
+                const productId = this.closest('.cart_item').dataset.productId;
+
+                fetch(`/cart/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Успешно удалено из базы данных
+                        this.closest('.cart_item').remove();
+                        document.querySelector('.total_price').textContent = data.totalPrice + ' ₽';
+                    } else {
+                        alert('Произошла ошибка при удалении товара.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка удаления товара:', error);
+                });
+            });
+            });
+
+            const counterContainers = document.querySelectorAll(".counter");
+
+            counterContainers.forEach(function(container) {
+                const quantityValue = container.querySelector(".counter_value p");
+
+                // Обработчик нажатия на кнопку минус
+                container.querySelector(".counter_minus").addEventListener("click", function() {
+                    let quantity = parseInt(quantityValue.textContent);
+                    let quantity_input = container.querySelector(".product_quantity");
+                    if (quantity > 1) {
+                        quantity--;
+                        quantityValue.textContent = quantity;
+                        quantity_input.setAttribute('value', quantity);
+                        quantity_input.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                // Обработчик нажатия на кнопку плюс
+                container.querySelector(".counter_plus").addEventListener("click", function() {
+                    let quantity = parseInt(quantityValue.textContent);
+                    let quantity_input = container.querySelector(".product_quantity");
+                    quantity++;
+                    quantityValue.textContent = quantity;
+                    quantity_input.setAttribute('value', quantity);
+                    quantity_input.dispatchEvent(new Event('change'));
+                });
+            });
+
+            const quantityInputs = document.querySelectorAll('.product_quantity');
+
+            quantityInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const quantity = this.value;
+                    const productId = this.closest('.cart_item').dataset.productId;
+
+                    fetch('{{ route('cart.updateQuantity') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId,
+                            quantity: quantity
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.querySelector('.total_price').textContent = data.totalPrice + ' ₽';
+                        } else {
+                            alert('Произошла ошибка при обновлении количества.');
+                        }
+                    });
+                });
+            });
+            }
     </script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            addEventListenersToCart();
+        });
+    </script>
     
     <script src="storage/js/genderSection.js"></script>
 

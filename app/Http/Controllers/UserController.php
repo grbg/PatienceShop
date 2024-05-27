@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\User;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Cart;
 
 
 class UserController extends Controller
@@ -43,7 +44,10 @@ class UserController extends Controller
 
         if (Auth::attempt(['email' => $request->email_login, 'password' => $request->password_login])) {
             $user = Auth::user();
-            return redirect()->back()->with(['user' => $user]);
+
+            $carts = Cart::where('user_id', Auth::id())->with('product')->get();
+
+            return redirect()->back()->with(['user' => $user], ['carts' => $carts]);
         }
 
         return redirect('/');

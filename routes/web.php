@@ -16,12 +16,12 @@ use App\Http\Controllers\CartController;
 |
 */
 
-Route::get('/', [ProductController::class, 'index']);
+Route::get('/', [ProductController::class, 'index'])->name('home');
 
 Route::post('/registration', [UserController::class, 'userRegister'])->name('register');
 Route::get('/login', [UserController::class, 'userLogin'])->name('login');
 
-Route::get('/shop', [ProductController::class, 'store']);
+Route::get('/shop', [ProductController::class, 'store'])->name('shop');
 
 Route::get('/shop/man', [ProductController::class, 'getManSection']);
 
@@ -31,7 +31,7 @@ Route::post('/shop/filter', [ProductController::class, 'filterProducts'])->name(
 
 Route::get('/shop/{gender}/{category}', [ProductController::class, 'filterByCategory']);
 
-Route::get('product', [ProductController::class, 'indexProduct']);
+Route::get('/manager', [ProductController::class, 'indexProduct']);
 
 // Route::post('product/update/{id}', [ProductController::class, 'updateProduct'])->name('product_update');
 
@@ -47,6 +47,10 @@ Route::get('/profile', function() {
 
 Route::post('/cart/add', [CartController::class, 'addProductInCart']);
 
-Route::get('/cart/confim', function() {
-    return view('cart');
-});
+Route::get('/cart/confim', [CartController::class, 'showUserCart'])->name('order.confirm');
+
+Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
+
+Route::delete('/cart/{productId}', [CartController::class, 'deleteCartItem'])->name('cart.delete');
+
+Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
