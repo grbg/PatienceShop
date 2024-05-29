@@ -53,7 +53,9 @@ class ProductController extends Controller
 
         $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
 
-        return view('shop', compact('products', 'images', 'categories', 'carts', 'sizes','total_price'));
+        $order_success = session('order_success', false);
+
+        return view('shop', compact('products', 'images', 'categories', 'carts', 'sizes','total_price', 'order_success'));
     }
 
     public function getProductsByIds($ids)  {
@@ -69,6 +71,7 @@ class ProductController extends Controller
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
         $categories = Category::all();
         $product_category = DB::table('category_product')->get();
+        $sizes = Size::all();
 
         if (request()->ajax()) {
             return response()->json([
@@ -87,17 +90,19 @@ class ProductController extends Controller
         //     $product->categories = $product_categories;
         // }
 
-        return view('manager', compact('products', 'images', 'categories', 'product_category'));
+        return view('manager', compact('products', 'images', 'categories', 'product_category', 'sizes'));
     }
 
     public function getManSection(Request $request) {
         $products = Product::where('gender', 'man')->get();
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
         $categories = Category::all();
+        $sizes = Size::all();
 
         return response()->json([
             'products' => $products,
-            'images' => $images
+            'images' => $images,
+            'sizes' => $sizes
         ]);
     }
 
@@ -105,10 +110,25 @@ class ProductController extends Controller
         $products = Product::where('gender', 'woman')->get();
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
         $categories = Category::all();
+        $sizes = Size::all();
 
         return response()->json([
             'products' => $products,
-            'images' => $images
+            'images' => $images,
+            'sizes' => $sizes
+        ]);
+    }
+
+    public function getAllSection(Request $request) {
+        $products = Product::all();
+        $images = Image::whereIn('product_id', $products->pluck('id'))->get();
+        $categories = Category::all();
+        $sizes = Size::all();
+
+        return response()->json([
+            'products' => $products,
+            'images' => $images,
+            'sizes' => $sizes
         ]);
     }
 
@@ -149,14 +169,15 @@ class ProductController extends Controller
 
         return response()->json([
             'products' => $products,
-            'images' => $images
+            'images' => $images,
+            'sizes' => $sizes
         ]);
     }
 
     public function filterByCategory($gender, $category) {
-        // Получить ID категории по имени (если нужно)
         $categoryModel = Category::where('id', $category)->first();
-        
+        $sizes = Size::all();
+
         if (!$categoryModel) {
             return response()->json(['products' => [], 'images' => []]);
         }
@@ -168,7 +189,7 @@ class ProductController extends Controller
 
             $images = Image::whereIn('product_id', $products->pluck('id'))->get();
 
-            return response()->json(['products' => $products, 'images' => $images]);
+            return response()->json(['products' => $products, 'images' => $images, 'sizes' => $sizes]);
         }
     
         $products = Product::where('gender', $gender)
@@ -189,7 +210,8 @@ class ProductController extends Controller
             'products' => $products, 
             'images' => $images,
             'categories' => $categories,
-            'product_categories' => $product_categories
+            'product_categories' => $product_categories,
+            'sizes' => $sizes
         ]);
     }
 
@@ -295,14 +317,18 @@ class ProductController extends Controller
         $productCategories = DB::table('category_product')
             ->where('product_id', $id)
             ->pluck('category_id');
-            
+
         $categories = Category::whereIn('id', $productCategories)->first();
+
+        $related_products = Product::whereHas('categories', function ($query) use ($productCategories) {
+            $query->whereIn('categories.id', $productCategories);
+        })->where('id', '<>', $id)->limit(4)->get();
 
         $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
 
         $carts = app()->call('App\Http\Controllers\CartController@index');
         
-        return view('product', compact('product','products', 'images', 'sizes', 'categories', 'total_price', 'carts'));
+        return view('product', compact('product','related_products','products', 'images', 'sizes', 'categories', 'total_price', 'carts'));
     }
 }
 

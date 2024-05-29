@@ -11,11 +11,6 @@
 <body>
     <header>
         <div class="menu_block">
-            <div class="menu_button">
-                <div class="first"></div>
-                <div class="second"></div>
-                <div class="third"></div>
-            </div>
             <div class="gender">
                 <p class="gender_label" id="woman-section-btn">Женское</p>
                 <p class="gender_label" id="man-section-btn">Мужское</p>
@@ -27,7 +22,6 @@
         </div>
 
         <div class="account_block">
-            <img class="account_button favorite" src="{{ asset('assets/ui_icons/favorite.png') }}">
             @if (auth()->user())
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
             @else
@@ -87,9 +81,9 @@
                 <div class="address label">
                     <p>Адрес Доставки</p>
                 </div>
-                    <form id="deliveryForm">
+                    <form id="deliveryForm" enctype="multipart/enctype">
                         <div class="input_container">
-                            <input type="text" id="country" class="_input" name="address" placeholder="Страна" >
+                            <input type="text" id="country" class="_input" name="country" placeholder="Страна" >
                         </div>
                         <div class="input_container">
                             <input type="text" id="city" class="_input" name="city" placeholder="Город" >
@@ -100,7 +94,20 @@
                         <div class="input_container">
                             <input type="text" id="house" class="_input" name="house" placeholder="Дом" >
                         </div>
+                        <div class="input_container">
+                            <input type="text" id="house" class="_input" name="zip" placeholder="Почтовый индекс">
+                        </div>
                         <div id="map" style="width: 600px; height: 400px;"></div>
+                        <div class="delivery_method_container">
+                            <div id="post" class="delivery_method active">
+                                <img src="{{ asset('storage/assets/ui_icons/post_light.png') }}">
+                                <p>Почта России</p>
+                            </div>
+                            <div id="delivery" class="delivery_method">
+                                <img src="{{ asset('storage/assets/ui_icons/delivery_dark.png') }}">
+                                <p>Доставка Курьером</p>
+                            </div>
+                        </div>
                         <div class="cart_total_price">
                             <p class="total_price_label">Итого </p>
                             <p class="total_price">{{ $total_price }} ₽</p>
@@ -109,6 +116,13 @@
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="order_modal">
+        <div class="success_message">
+            <img src="{{ asset('storage/assets/ui_icons/success.png') }}">
+            <p>Заказ успешно оформлен</p>
         </div>
     </div>
 </body>
@@ -254,5 +268,64 @@
     });
 </script>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const deliveryForm = document.getElementById('deliveryForm');
+
+    deliveryForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+        const products = [];
+
+        const userId = '{{ auth()->user()->id }}'; // Предполагается, что пользователь авторизован
+        const totalPrice = '{{ $total_price }}'
+
+        // Добавляем user_id и total_price в данные формы
+        formData.append('user_id', userId);
+        formData.append('total_price', totalPrice);
+
+        // Собираем информацию о каждом товаре в корзине
+        document.querySelectorAll('.cart_item').forEach(cartItem => {
+            const productId = cartItem.dataset.productId;
+
+            products.push({ product_id: productId});
+        });
+
+        // Добавляем информацию о товарах в данные формы
+        formData.append('products', JSON.stringify(products));
+
+        // Отправляем запрос на создание заказа
+        fetch('{{ route("order.create") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                    window.location.href = '{{ route("shop") }}?order_success=true';
+            } else {
+                alert("Не удалось создать заказ. Пожалуйста, попробуйте еще раз.");
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+    });
+</script>
+
+<script>
+    container = document.querySelector(.delivery_method_container);
+
+    const post = container.getElementById('post');
+
+    post.addEventListener('click', function() {
+        img = post.querySelector('img');
+
+        img.getAttribute('src') = 
+    });
+</script>
 
 </html>

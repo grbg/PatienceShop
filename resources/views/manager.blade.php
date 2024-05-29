@@ -11,11 +11,6 @@
 <body>
     <header>
         <div class="menu_block">
-            <div class="menu_button">
-                <div class="first"></div>
-                <div class="second"></div>
-                <div class="third"></div>
-            </div>
             <div class="gender">
                 <p class="gender_label" id="woman-section-btn">Женское</p>
                 <p class="gender_label" id="man-section-btn">Мужское</p>
@@ -23,7 +18,7 @@
         </div>
 
         <div class="logo">
-            <a href="{{ route('/') }}"><p class="logo_label">Patience</p></a>
+            <a href="{{ route('home') }}"><p class="logo_label">Patience</p></a>
         </div>
 
         <div class="account_block">
@@ -141,7 +136,7 @@
         <div class="modal_background">
             <div class="insert_modal">
                 <h1>Добавление товара</h1>
-                <form class="insert_modal_form"  method="post">
+                <div class="insert_modal_form"  method="post">
                     @csrf
                     <div class="input_wrapper">
                         <p class="product_input_label">Название товара</p>
@@ -196,12 +191,13 @@
                             </div>
                         </div>
                     </div>
+            </div>
                     <div class="upload_input">
                         <label for="upload_image">
                                 <div class="add_img_button">
                                     <div class="upload_img_icon_container">
                                         <img src="{{ asset('storage/assets/ui_icons/upload.png') }}">
-                                        <p>Добавить фото</p>
+                                        <p id="upload_text">Добавить фото</p>
                                     </div>
                                 </div>
                         </label>
@@ -210,7 +206,7 @@
                     <div class="input_button">
                         <button  type="submit" id="add_product_button">Обновить</button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
 
@@ -274,8 +270,7 @@
                 <div class="cart_footer">
                     <button class="_button">Оформить заказ</button>
                 </div>
-    </div>
-
+        </div>
 
         <div class="burger_menu">
             <div class="cross_button">
@@ -343,6 +338,25 @@
         <script src="js/nav.js"></script>
         <script src="storage/js/productUpdate.js"></script>
         <script src="storage/js/admin_filter_product.js"></script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const uploadInput = document.getElementById('upload_image');
+                const uploadLabel = document.querySelector('.add_img_button');
+                var upload_text = document.getElementById('upload_text');
+
+                uploadInput.addEventListener('change', function() {
+                    if (uploadInput.files.length > 0) {
+                        uploadLabel.classList.add('added');
+                        upload_text.textContent = "Фото успешно добавлено"
+                    } else {
+                        uploadLabel.classList.remove('added');
+                        upload_text.textContent = "Добавить фото"
+                    }
+                });
+            });
+Полный
+        </script>
 
         <script>
             var textarea = document.querySelector('textarea');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{ asset('storage/css/nav.css')}}">
-    <link rel="stylesheet" href="{{ asset('storage/css/product.css')}}">
+    <link rel="stylesheet" href="{{ asset('storage/css/success.css')}}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Document</title>
@@ -11,6 +11,11 @@
 <body>
     <header>
         <div class="menu_block">
+            <div class="menu_button">
+                <div class="first"></div>
+                <div class="second"></div>
+                <div class="third"></div>
+            </div>
             <div class="gender">
                 <a href="{{ route('shop') }}"><p class="gender_label" id="woman-section-btn">Каталог</p></a>
             </div>
@@ -21,104 +26,15 @@
         </div>
 
         <div class="account_block">
+            <img class="account_button favorite" src="{{ asset('assets/ui_icons/favorite.png') }}">
             @if (auth()->user())
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
-                <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
             @else
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
-                <a href="{{ route('cart.data') }}">
-                    <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
-                </a>
             @endif
+            <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
         </div>
     </header>
-    
-    <div class="product_container">
-        <div class="product_img_container">
-            @foreach($images as $image)
-            @if ($image->product_id == $product->id)
-            <?php
-                $image = $images->where('product_id', $product->id)->first();
-                $imageUrl = asset('storage/'.$image->url);
-            ?>
-            <img src="{{ $imageUrl }}">
-            @endif
-            @endforeach
-        </div>
-        <div class="product_info" data-product-id="{{ $product->id }}">
-            <div class="breadcrumbs">
-                <p>Каталог</p>
-                <p class="line"> — </p>
-                <p>{{ $categories->category_name}}</p>
-                <p class="line"> — </p>
-                <span >{{ $product->product_name }}</span>
-            </div>
-            <div class="main_product_label">
-                <p>{{ $product->product_name }}</p>
-            </div>
-            <div class="product_description">
-                <p>{{ $product->description }}</p>
-            <div class="size_label">
-                <p>Размер</p>
-            </div>
-            <div class="size_container">
-                @foreach($sizes as $size)
-                <div data-size-id="{{ $size->id }}" class="size_item">
-                    <p>{{ $size->size }}</p>
-                </div>
-                @endforeach
-            </div>
-            <div class="product_price">
-                <p>{{ $product->price }} ₽</p>
-            </div>
-            <div class="button_container">
-                <button id="add_cart" class="_button">Добавить в корзину</button>
-            </div>
-        </div>
-        </div>
-    </div>
-
-    <div class="similar_product_container">
-        <div class="similar_label">Похожие товары</div>
-        <div class="similar_container">
-            @foreach ($related_products as $product)
-            <div class="product" data-product-id="{{ $product->id }}">
-                <div class="product_image">
-                    <?php
-                    $image = $images->where('product_id', $product->id)->first();
-                    $imageUrl = asset('storage/'.$image->url)
-                    ?>
-                    <a href="{{ route('product.show', ['id' => $product->id])  }}">
-                        <img class="product_item" src="{{ $imageUrl }}">
-                    </a>
-                    <div class="size_block">
-                        <p>Выберите размер</p>
-                        <div class="size_container">
-                            @foreach ($sizes as $size)
-                            <button data-size-id="{{ $size->id }}" class="size_button">{{ $size->size }}</button>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="product_status">
-                    @if($product->created_at > now()->subWeek())    
-                        <div class="status">
-                            <p>new</p>
-                        </div>
-                    @endif
-                    </div>
-                </div>
-                <div class="product_desc">
-                    <h1 class="product_label">
-                        {{ $product->product_name }}
-                    </h1>
-                    <p>
-                        {{ $product->price }} ₽
-                    </p>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
 
     <div class="cart_block">
         <div class="cart_menu">
@@ -187,7 +103,7 @@
                 <p class="total_price_label">Итого </p>
                 <p class="total_price">{{ $total_price }} ₽</p>
             </div>
-                <a href="{{ route('order.confirm') }}"><button class="_button">Оформить заказ</button></a>
+            <a href="{{ route('order.confirm') }}"><button class="_button">Оформить заказ</button></a>
         </div>
     </div>
 
@@ -261,6 +177,23 @@
             <p>Товар добавлен в корзину</p>
         </div>
     </div>
+
+    <script>
+        const menu_btn = document.querySelector('.menu_button');
+        const cross_btn = document.querySelector('.cross_button');
+
+        menu_btn.addEventListener('click', function() {
+            var burger = document.querySelector('.burger_menu');
+
+            burger.classList.toggle('active');
+        });
+
+        cross_btn.addEventListener('click', function() {
+            var burger = document.querySelector('.burger_menu');
+
+            burger.classList.toggle('active');
+        });
+    </script>
 
     <script>
         const login = document.querySelector('.login');
@@ -404,9 +337,9 @@
                         if (data.success) {
                             const add_modal = document.querySelector('.add_product_modal');
                             updateCart(data.cart);
-                            add_modal.classList.add('active');
+                            add_modal.style.display = 'block';
                             setTimeout(() => {
-                                add_modal.classList.remove('active');
+                                add_modal.style.display = 'none';
                             }, 3000);
                         } else {
                             alert("Failed to add product to cart.");
@@ -605,9 +538,9 @@
                         if (data.success) {
                             const add_modal = document.querySelector('.add_product_modal');
                             updateCart(data.cart);
-                            add_modal.classList.add('active');
+                            add_modal.style.display = 'block';
                             setTimeout(() => {
-                                add_modal.classList.remove('active');
+                                add_modal.style.display = 'none';
                             }, 3000);
                         } else {
                             alert("Failed to add product to cart.");

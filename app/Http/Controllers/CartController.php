@@ -7,11 +7,12 @@ use Illuminate\Http\Request;
 use App\User;
 use App\Models\Image;
 use App\Models\Cart;
+use App\Models\Product;
+use App\Models\Category;
 
 class CartController extends Controller
 {
-    public function index()
-    {
+    public function index() {
         $carts = Cart::where('user_id', Auth::id())->with('product')->get();
 
         return $carts;
@@ -177,5 +178,24 @@ class CartController extends Controller
         return response()->json(['success' => true, 'totalPrice' => $total_price]);
     }
 
-    
+    public function showSuccess() {
+        $products = Product::all();
+        $images = Image::all();
+        $categories = Category::all();
+
+        if (request()->ajax()) {
+            return response()->json([
+                'products' => $products,
+                'images' => $images
+            ]);
+        }
+
+        $carts = app()->call('App\Http\Controllers\CartController@index');
+
+        $sizes = app()->call('App\Http\Controllers\SizeController@getAllSizes');
+
+        $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
+
+        return view('success', compact('products', 'images', 'categories', 'carts', 'sizes','total_price'));
+    }
 }

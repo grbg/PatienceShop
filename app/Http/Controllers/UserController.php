@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Validator;
 use App\User;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Cart;
+use App\Models\Order;
+use App\Models\OrderItem;
 
 
 class UserController extends Controller
@@ -53,5 +55,22 @@ class UserController extends Controller
         return redirect('/');
     }
 
+    public function showUserData()
+    {
+        $user = auth()->user();
+        $orders = Order::where('user_id', $user->id)->get();
+    
+        $orderItems = OrderItem::whereIn('order_id', $orders->pluck('id'))->get();
+    
+        $orders->each(function($order) use ($orderItems) {
+            $order->orderItems = $orderItems->where('order_id', $order->id);
+        });
+
+        $carts = app()->call('App\Http\Controllers\CartController@index');
+
+        $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
+
+        return view('profile', compact('user', 'orders', 'carts', 'total_price'));
+    }
 
 }

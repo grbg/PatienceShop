@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,8 @@ Route::get('/shop/man', [ProductController::class, 'getManSection']);
 
 Route::get('/shop/woman', [ProductController::class, 'getWomanSection']);
 
+Route::get('/shop/all', [ProductController::class, 'getAllSection']);
+
 Route::post('/shop/filter', [ProductController::class, 'filterProducts'])->name('shop.filter');
 
 Route::get('/shop/{gender}/{category}', [ProductController::class, 'filterByCategory']);
@@ -41,9 +44,7 @@ Route::post('/add-product', [ProductController::class, 'addProduct'])->name('add
 
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
-Route::get('/profile', function() {
-    return view('profile');
-});
+Route::get('/profile',  [UserController::class, 'showUserData']);
 
 Route::post('/cart/add', [CartController::class, 'addProductInCart']);
 
@@ -54,3 +55,9 @@ Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])-
 Route::delete('/cart/{productId}', [CartController::class, 'deleteCartItem'])->name('cart.delete');
 
 Route::get('/product/{id}', [ProductController::class, 'show'])->name('product.show');
+
+Route::get('/success', [CartController::class, 'showSuccess']);
+
+Route::post('/order/success', [OrderController::class, 'createOrder'])->name('order.create');
+
+Route::delete('/cart/init', [CartController::class, 'getCartData'])->name('cart.data');

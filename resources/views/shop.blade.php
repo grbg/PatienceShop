@@ -10,11 +10,6 @@
 <body>
     <header>
         <div class="menu_block">
-            <div class="menu_button">
-                <div class="first"></div>
-                <div class="second"></div>
-                <div class="third"></div>
-            </div>
             <div class="gender">
                 <p class="gender_label" id="woman-section-btn">Женское</p>
                 <p class="gender_label" id="man-section-btn">Мужское</p>
@@ -26,7 +21,6 @@
         </div>
 
         <div class="account_block">
-            <img class="account_button favorite" src="{{ asset('assets/ui_icons/favorite.png') }}">
             @if (auth()->user())
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
             @else
@@ -82,10 +76,6 @@
                     <p>
                         {{ $product->price }} ₽
                     </p>
-                    <div class="product_btn">
-                        <p>Добавить к корзину</p>
-                        <img src="{{ asset('assets/ui_icons/favorite.png') }}">
-                    </div>
                 </div>
             </div>
             @endforeach
@@ -233,6 +223,15 @@
             <div class="add_product_modal">
                 <p>Товар добавлен в корзину</p>
             </div>
+
+            @if ($order_success)
+            <div class="order_modal">
+                <div class="success_message">
+                    <img src="{{ asset('storage/assets/ui_icons/success.png') }}">
+                    <p>Заказ успешно оформлен</p>
+                </div>
+            </div>
+            @endif
         </div>
         
 
@@ -397,9 +396,9 @@
                         if (data.success) {
                             const add_modal = document.querySelector('.add_product_modal');
                             updateCart(data.cart);
-                            add_modal.style.display = 'block';
+                            add_modal.classList.add('active');
                             setTimeout(() => {
-                                add_modal.style.display = 'none';
+                                add_modal.classList.remove('active');
                             }, 3000);
                         } else {
                             alert("Failed to add product to cart.");
@@ -551,10 +550,298 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             addEventListenersToCart();
+            const add_modal = document.querySelector('.order_modal');
+            setTimeout(() => {
+                add_modal.style.display = 'none';
+            }, 3000);
         });
     </script>
     
-    <script src="storage/js/genderSection.js"></script>
+    <script>
+        document.querySelectorAll('.category').forEach((category) => {
+            category.addEventListener('click', function() {
+                    var other = document.querySelectorAll('.category').forEach(other_category => 
+                    {
+                        other_category.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+        });
+    </script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+        document
+            .getElementById("man-section-btn")
+            .addEventListener("click", function () {
+                fetchSection("man");
+                var other = document
+                    .querySelectorAll(".category")
+                    .forEach((other_category) => {
+                        other_category.classList.remove("active");
+                    });
+            });
+
+        document
+            .getElementById("woman-section-btn")
+            .addEventListener("click", function () {
+                fetchSection("woman");
+                var other = document
+                    .querySelectorAll(".category")
+                    .forEach((other_category) => {
+                        other_category.classList.remove("active");
+                    });
+            });
+
+        document.querySelectorAll(".category-filter").forEach((button) => {
+            button.addEventListener("click", function () {
+                const category = this.dataset.category;
+                const genderElement = document.querySelector(".breadcrumbs span").innerText;
+                const gender = genderElement === "Мужское"
+                    ? "man"
+                    : genderElement === "Женское"
+                    ? "woman"
+                    : "all";
+                console.log(gender);
+                fetchSection(gender, category);
+            });
+        });
+
+        function fetchSection(gender, category = null) {
+            let url = `/shop/${gender}`;
+            if (category) {
+                url += `/${category}`;
+            }
+
+            fetch(url)
+                .then((response) => response.json())
+                .then((data) => {
+                    updateProductList(data.products, data.images, data.sizes);
+                    updateBreadcrumbs(gender, category);
+                })
+                .catch((error) =>
+                    console.error(`Error fetching ${gender} section:`, error)
+                );
+        }
+
+        function updateBreadcrumbs(gender, category = null) {
+            const breadcrumbs = document.querySelector(".breadcrumbs");
+            let categoryLabel = category
+                ? ` ${
+                    document.querySelector(
+                    `.category-filter[data-category="${category}"]`
+                    ).innerText
+                }`
+                : "";
+            breadcrumbs.innerHTML = `
+                <p>Каталог</p>
+                <p class="line"> — </p> 
+                <span class="gender_bc">${
+                    gender === "man"
+                        ? "Мужское"
+                        : gender === "woman"
+                        ? "Женское"
+                        : "Все"
+                }</span>
+                ${categoryLabel !== "" ? '<p class="line"> — </p>' : ""}
+                <span>${categoryLabel}</span>
+            `;
+        }
+
+        function updateProductList(products, images, sizes) {
+            const productList = document.getElementById("product-list");
+            productList.innerHTML = "";
+
+            products.forEach((product) => {
+                const productItem = document.createElement("div");
+                productItem.className = "product";
+                productItem.dataset.productId = product.id;
+
+                const productImage = images.find(
+                    (image) => image.product_id === product.id
+                );
+                const imageUrl = productImage
+                    ? `/storage/${productImage.url}`
+                    : "default-image-url";
+
+                const productCreatedAt = new Date(product.created_at);
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+                const isNewProduct = productCreatedAt > oneWeekAgo;
+
+                const generateSizeButtons = (sizes) => {
+                    return sizes.map((size) =>`<button class="size_button" data-size-id="${size.id}">${size.size}</button>`).join("");
+                };
+
+                productItem.innerHTML = `
+                    <div class="product_image">
+                        <a href="http://patienceshop/product/${product.id}">
+                            <img class="product_item" src="${imageUrl}" alt="${
+                                product.product_name
+                            }">
+                        </a>
+                    <div class="size_block">
+                        <p>Выберите размер</p>
+                        <div class="size_container">
+                            ${generateSizeButtons(sizes)}
+                        </div>
+                    </div>
+                    ${
+                        isNewProduct
+                            ? `
+                    <div class="product_status">
+                        <div class="status">
+                            <p>new</p>
+                        </div>
+                    </div>
+                    `
+                            : ""
+                    }
+                </div>
+                <div class="product_desc">
+                    <h1 class="product_label">${product.product_name}</h1>
+                    <p>${product.price} ₽</p>   
+                </div>
+            `;
+            productList.appendChild(productItem);
+            });
+
+            animateOnScroll();
+            attachEventHandler();
+
+        }
+
+        function updateCart(cart) {
+        const cartContainer = document.querySelector(".cart_container");
+        cartContainer.innerHTML = "";
+
+        cart.items.forEach((cartItem) => {
+            const cartItemElement = document.createElement("div");
+            cartItemElement.classList.add("cart_item");
+            cartItemElement.dataset.productId = cartItem.product_id;
+            cartItemElement.innerHTML = `
+                        <img src="${cartItem.image_url}">
+                        <div class="cart_item_desc">
+                            <p class="cart_item_name">${cartItem.product_name}</p>
+                            <p class="article">Артикул: ${cartItem.product_id}</p>
+                            <div class="product_quantity_container">
+                                <p class="cart_item_count">Количество товара:  </p>
+                                <div class="counter">
+                                    <div class="counter_minus">
+                                        <p>-</p>
+                                    </div>
+                                    <div class="counter_value">
+                                        <p id="quantity_value">${cartItem.quantity}</p>
+                                    </div>
+                                    <div class="counter_plus">
+                                        <p>+</p>
+                                    </div>
+                                    <input hidden id="product_quantity" class="product_quantity" type="number" name="product_quantity" value="${cartItem.quantity}">
+                                </div>
+                            </div>
+                            <div class="product_size_container">
+                                <p>Размер</p>
+                                <p class="cart_product_size">${cartItem.size_name}</p>
+                            </div>
+                            <div class="cart_item_footer">
+                                <p class="cart_item_price">${cartItem.price} ₽</p>
+                                <div class="cart_item_buttons">
+                                    <img class="favorite_icon" src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
+                                    <img class="trash_icon" src="{{ asset('storage/assets/ui_icons/trash.png') }}">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            cartContainer.appendChild(cartItemElement);
+        });
+
+        document.querySelector(".total_price").textContent =
+            cart.total_price + " ₽";
+
+        addEventListenersToCart();
+        }
+
+        function animateOnScroll() {
+            const products = document.querySelectorAll('.product');
+            const scrollPosition = window.pageYOffset + window.innerHeight;
+
+            products.forEach((product, index) => {
+                if (product.offsetTop < scrollPosition) {
+                    const delay = (index % 8) * 0.2; // Сброс счетчика индекса после каждых четырех элементов
+                    product.style.setProperty('--delay', `${delay}s`);
+                    product.classList.add('animate');
+                }
+            });
+        }
+
+        function attachEventHandler() {
+            document.querySelectorAll(".size_button").forEach((button) => {
+                button.addEventListener("click", function () {
+                    const productId = this.closest(".product").dataset.productId;
+                    console.log(productId);
+                    const sizeId = this.dataset.sizeId;
+                    console.log(sizeId);
+
+                    fetch("/cart/add", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document
+                                .querySelector('meta[name="csrf-token"]')
+                                .getAttribute("content"),
+                        },
+                        body: JSON.stringify({
+                            product_id: productId,
+                            size_id: sizeId,
+                            quantity: 1,
+                        }),
+                    })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.success) {
+                            const add_modal =
+                            document.querySelector(".add_product_modal");
+                            updateCart(data.cart);
+                            add_modal.style.display = "block";
+                            setTimeout(() => {
+                                add_modal.style.display = "none";
+                            }, 3000);
+                        } else {
+                            alert("Failed to add product to cart.");
+                        }
+                    })
+                    .catch((error) => console.error("Error:", error));
+            });
+            });
+       
+            }
+        });
+    </script>
+
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const products = document.querySelectorAll('.product');
+
+        function animateOnScroll() {
+            const scrollPosition = window.pageYOffset + window.innerHeight;
+
+            products.forEach((product, index) => {
+                if (product.offsetTop < scrollPosition) {
+                    const delay = (index % 8) * 0.2; // Сброс счетчика индекса после каждых четырех элементов
+                    product.style.setProperty('--delay', `${delay}s`);
+                    product.classList.add('animate');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', animateOnScroll);
+        window.addEventListener('load', animateOnScroll); // для анимации элементов, которые видны сразу при загрузке страницы
+    });
+
+  
+</script>
 
 </body>
 </html>

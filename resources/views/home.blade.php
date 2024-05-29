@@ -16,7 +16,6 @@
             <a href="{{ route('home') }}"><p class="logo_label">Patience</p></a>
         </div>
         <div class="account">
-            <img class="account_button" src="{{ asset('assets/ui_icons/favorite.png') }}">
             <img class="account_button" src="{{ asset('assets/ui_icons/account.png') }}">
             <img class="account_button" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
         </div>

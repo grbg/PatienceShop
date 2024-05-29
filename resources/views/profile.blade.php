@@ -11,11 +11,6 @@
 <body>
     <header>
         <div class="menu_block">
-            <div class="menu_button">
-                <div class="first"></div>
-                <div class="second"></div>
-                <div class="third"></div>
-            </div>
             <div class="gender">
                 <a href="{{ route('shop') }}"><p class="gender_label" id="woman-section-btn">Каталог</p></a>
             </div>
@@ -26,7 +21,6 @@
         </div>
 
         <div class="account_block">
-            <img class="account_button favorite" src="{{ asset('assets/ui_icons/favorite.png') }}">
             @if (auth()->user())
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
             @else
@@ -36,6 +30,26 @@
         </div>
     </header>
     
+    <div class="profile_container">
+        <p>Здравствуйте, {{ $user->name }}</p>
+
+        <div class="profile_data_container">
+            <div class="profile_data">
+                <p>Имя</p>
+                
+            </div>
+            <div class="profile_data">
+                <p>Электронная почта</p>
+            </div>
+            <div class="profile_data">
+                <p>Номер телефона</p>
+            </div>
+            <div class="profile_data">
+                <p>Дата рождения</p>
+            </div>
+        </div>
+    </div>
+
     <div class="cart_block">
         <div class="cart_menu">
             <div class="cart_label">
@@ -105,16 +119,6 @@
             </div>
             <a href="{{ route('order.confirm') }}"><button class="_button">Оформить заказ</button></a>
         </div>
-    </div>
-
-    <div class="burger_menu">
-        <div class="cross_button">
-            <img src="{{ asset('assets/ui_icons/cross.png') }}">
-        </div>
-        <p class="menu_item">Новинки</p>
-        <p class="menu_item">Популярное</p>
-        <p class="menu_item">Аксессуары</p>
-        <p class="menu_item">Акции</p>
     </div>
 
     <div class="login_block">
