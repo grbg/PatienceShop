@@ -22,7 +22,9 @@
 
         <div class="account_block">
             @if (auth()->user())
-                <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+                <a href="{{ route('profile') }}">
+                    <img class="account_button account_in" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+                </a>
             @else
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
             @endif
@@ -30,24 +32,138 @@
         </div>
     </header>
     
+    <div class="profile_button_container">
+        <p id="account_data" class="profile_button">Мои данные</p>
+        <p id="account_order" class="profile_button">Мои заказы</p>
+        <p id="account_logout" class="profile_button">Выйти из аккаунта</p>
+    </div>
     <div class="profile_container">
-        <p>Здравствуйте, {{ $user->name }}</p>
+        <p class="profile_label">Здравствуйте, {{ $user->name }}</p>
 
         <div class="profile_data_container">
             <div class="profile_data">
                 <p>Имя</p>
-                
+                <div class="profile_data_value">{{ $user->name }}</div>
             </div>
             <div class="profile_data">
                 <p>Электронная почта</p>
+                <div class="profile_data_value">{{ $user->email }}</div>
             </div>
             <div class="profile_data">
                 <p>Номер телефона</p>
+                <div class="profile_data_value">{{ $user->phone }}</div>
             </div>
             <div class="profile_data">
                 <p>Дата рождения</p>
+                <div class="profile_data_value">{{ $user->birthday->format('d.m.Y') }}</div>
             </div>
+            <button id="edit_profile_button" class="_button">Редактировать</button>
+            <form id="delete-account-form" action="{{ route('delete.account') }}" method="POST" style="display: none;">
+                @csrf
+                @method('DELETE')
+            </form>
+            <a onclick="event.preventDefault(); document.getElementById('delete-account-form').submit();"><p class="delete_button">Удалить аккаунт</p></a>
         </div>
+
+        <div class="order_container">
+             @if($orders->isEmpty())
+                <p>У вас нет заказов.</p>
+            @else
+            <div class="order_container_label">
+                <div class="order_inf_container">
+                    <p>Номер заказа</p>
+                </div>
+                <div class="order_inf_container">
+                    <p>Дата создания заказа</p>
+                </div>
+                <div class="order_inf_container">
+                    <p>Статус заказа</p>
+                </div>
+                <div class="order_inf_container">
+                    <p>Общая стоимость</p>
+                </div>
+            </div>
+                @foreach($orders as $order)
+                <div class="order">
+                    <div class="order_inf">
+                        <div class="order_inf_container">
+                            <p>{{ $order->id }}</p>
+                        </div>
+                        <div class="order_inf_container">
+                            <p>{{ $order->created_at->format('d.m.Y') }}</p>
+                        </div>
+                        <div class="order_inf_container">
+                            <p>{{ $order->status }}</p>
+                        </div>
+                        <div class="order_inf_container">
+                            <p>{{ number_format($order->total_price, 2) }} ₽</p>
+                        </div>
+                        <div class="order_inf_button">
+                            <img src="{{ asset('storage/assets/ui_icons/more.png') }}">
+                        </div>
+                    </div>
+
+                    <div class="order_items_container">     
+                        @foreach($order->orderItems as $item)
+                        @foreach($products as $product)
+                            @if ($product->id == $item->product_id)
+                            <div class="order_item">
+                                <?php
+                                    $image = $images->where('product_id', $product->id)->first();
+                                    $imageUrl = asset('storage/'.$image->url);
+                                ?>
+                                <img src="{{ $imageUrl }}">
+                                <div class="order_item_desc">
+                                    <div class="order_item_desc_elem">
+                                        <p class="order_item_name">{{ $product->product_name }}</p>
+                                    </div>
+                                    <div class="order_item_desc_elem">
+                                        <p class="order_item_elem_label">Размер</p>
+                                        @foreach ($sizes as $size)
+                                            @if ($size->id == $item->size_id)
+                                                <p class="order_item_elem_value">{{ $size->size }}</p>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                    <div class="order_item_desc_elem">
+                                        <p class="order_item_elem_label">Количество</p>
+                                        <p class="order_item_elem_value">{{ $item->quantity }}</p>
+                                    </div>
+                                    <div class="order_item_desc_elem">
+                                        <p class="order_item_elem_label">Цена</p>
+                                        <p class="order_item_elem_value">{{ number_format($item->price, 2) }} ₽</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                        @endforeach
+                        @endforeach
+                    </div>
+                </div>
+                @endforeach
+            @endif
+        </div>
+
+        <form class="edit_profile_data" method="POST" action="{{ route('update.profile') }}">
+            @csrf
+            <div class="profile_data">
+                <p>Имя</p>
+                <input type="text" name="name" class="profile_data_value _input" value='{{ $user->name }}'></input>
+            </div>
+            <div type="text" class="profile_data">
+                <p>Электронная почта</p>
+                <input type="text" name="email" class="profile_data_value _input" value='{{ $user->email }}'>
+            </div>
+            <div class="profile_data">
+                <p>Номер телефона</p>
+                <input type="text" name="phone" class="profile_data_value _input" value='{{ $user->phone }}'>
+            </div>
+            <div class="profile_data">
+                <p>Дата рождения</p>
+                <input type="text" name="birthday" class="profile_data_value _input" value="{{ $user->birthday->format('d.m.Y') }}">
+            </div>
+            <button type="submit" class="_button">Сохранить изменения</button>
+        </form>
     </div>
 
     <div class="cart_block">
@@ -183,19 +299,38 @@
     </div>
 
     <script>
-        const menu_btn = document.querySelector('.menu_button');
-        const cross_btn = document.querySelector('.cross_button');
+        const acc_data_btn = document.getElementById("account_data");
+        const acc_order_btn = document.getElementById("account_order");
+        const acc_logout_btn = document.getElementById("account_logout");
+        const editProfileButton = document.getElementById('edit_profile_button');
 
-        menu_btn.addEventListener('click', function() {
-            var burger = document.querySelector('.burger_menu');
+        var data_container = document.querySelector('.profile_data_container');
+        var editProfileForm = document.querySelector('.edit_profile_data');
+        var order_container = document.querySelector('.order_container');
 
-            burger.classList.toggle('active');
+        acc_data_btn.addEventListener("click", function() {
+            data_container.style.display = 'block';
+            order_container.style.display = 'none';
+            editProfileForm.style.display = 'none';
         });
 
-        cross_btn.addEventListener('click', function() {
-            var burger = document.querySelector('.burger_menu');
+        acc_order_btn.addEventListener("click", function() {
+            data_container.style.display = 'none';
+            editProfileForm.style.display = 'none';
+            order_container.style.display = 'block';
+        });
 
-            burger.classList.toggle('active');
+        editProfileButton.addEventListener("click", function() {
+            editProfileForm.style.display = 'block';
+            data_container.style.opacity = '0';
+            data_container.style.transform = 'translateY(20px)';
+        
+            setTimeout(() => {
+                editProfileForm.style.opacity = '1';
+                editProfileForm.style.transform = 'translateY(0)';
+                data_container.style.display = 'none';
+                order_container.style.display = 'none';
+            }, 100);
         });
     </script>
 
@@ -226,6 +361,7 @@
         const account_btn = document.querySelector('.account');
         let burger = document.querySelector('.login_block');
         const acc_cross_btn = document.querySelector('.cross_btn');
+
 
         account_btn.addEventListener('click', function() {
             burger.classList.toggle('active');
@@ -315,6 +451,95 @@
 
 
 
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const products = document.querySelectorAll('.anim_container');
+
+            function animateOnScroll() {
+                const scrollPosition = window.pageYOffset + window.innerHeight;
+
+                products.forEach((product, index) => {
+                    if (product.offsetTop < scrollPosition) {
+                        const delay = (index % 8) * 0.2; // Сброс счетчика индекса после каждых четырех элементов
+                        product.style.setProperty('--delay', `${delay}s`);
+                        product.classList.add('animate');
+                    }
+                });
+            }
+
+                window.addEventListener('scroll', animateOnScroll);
+                window.addEventListener('load', animateOnScroll); // для анимации элементов, которые видны сразу при загрузке страницы
+            });
+    </script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Получаем все кнопки с классом 'order_inf_button'
+            const orderInfButtons = document.querySelectorAll('.order_inf_button');
+
+            // Добавляем обработчик событий для каждой кнопки
+            orderInfButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    // Находим родительский блок 'order_inf'
+                    const orderInf = this.closest('.order');
+
+                    // Находим блок 'order_items_container' внутри родительского блока
+                    const orderItemsContainer = orderInf.querySelector('.order_items_container');
+
+                    // Если блок 'order_items_container' видимый, скрываем его, иначе показываем
+                    if (orderItemsContainer.classList.contains('active')) {
+                        orderItemsContainer.classList.remove('active');
+                    } else {
+                        orderItemsContainer.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const profileButton = document.getElementById('account_data');
+            const orderButton = document.getElementById('account_order');
+            const logoutButton = document.getElementById('account_logout');
+            const profileDataContainer = document.querySelector('.profile_data_container');
+            const orderContainer = document.querySelector('.order_container');
+            const editProfileForm = document.querySelector('.edit_profile_data');
+
+            function showProfileData() {
+                orderContainer.style.opacity = '0'; 
+                orderContainer.style.transform = 'translateY(20px)';
+                editProfileForm.style.opacity = '0'; 
+                editProfileForm.style.transform = 'translateY(20px)';
+
+                setTimeout(() => {
+                    profileDataContainer.style.opacity = '1'; // Плавно сделать блок данных профиля видимым
+                    if (profileDataContainer.style.transform === 'translateY(20px)') {
+                        profileDataContainer.style.transform = 'translateY(0)'; // Плавно вернуть блок данных профиля на место
+                    }
+                }, 100);
+            }
+
+            function showOrderContainer() {
+                profileDataContainer.style.opacity = '0'; // Скрываем блок данных профиля
+                profileDataContainer.style.transform = 'translateY(20px)';
+                editProfileForm.style.opacity = '0'; 
+                editProfileForm.style.transform = 'translateY(20px)';
+
+                setTimeout(() => {
+                    orderContainer.style.opacity = '1'; // Плавно сделать блок заказов видимым
+                    if (orderContainer.style.transform === 'translateY(20px)') {
+                        orderContainer.style.transform = 'translateY(0)';
+                    } // Плавно вернуть блок заказов на место
+                }, 100);
+            }
+
+
+            profileButton.addEventListener('click', showProfileData);
+            orderButton.addEventListener('click', showOrderContainer);
+        });
     </script>
 
 </body>

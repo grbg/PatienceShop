@@ -22,14 +22,13 @@
 
         <div class="account_block">
             @if (auth()->user())
-                <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
-                <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
+                <a href="{{ route('profile') }}">
+                    <img class="account_button account_in" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+                </a>
             @else
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
-                <a href="{{ route('cart.data') }}">
-                    <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
-                </a>
             @endif
+            <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
         </div>
     </header>
     

@@ -46,7 +46,7 @@ class ProductController extends Controller
                 'images' => $images
             ]);
         }
-
+        else {
         $carts = app()->call('App\Http\Controllers\CartController@index');
 
         $sizes = app()->call('App\Http\Controllers\SizeController@getAllSizes');
@@ -56,6 +56,7 @@ class ProductController extends Controller
         $order_success = session('order_success', false);
 
         return view('shop', compact('products', 'images', 'categories', 'carts', 'sizes','total_price', 'order_success'));
+        }
     }
 
     public function getProductsByIds($ids)  {
@@ -98,12 +99,20 @@ class ProductController extends Controller
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
         $categories = Category::all();
         $sizes = Size::all();
+        $carts = app()->call('App\Http\Controllers\CartController@index');
+        $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
+        $order_success = session('order_success', false);
 
-        return response()->json([
-            'products' => $products,
-            'images' => $images,
-            'sizes' => $sizes
-        ]);
+        if ($request->ajax()) {
+            return response()->json([
+                'products' => $products,
+                'images' => $images,
+                'sizes' => $sizes
+            ]);
+        }
+        else {
+            return view('shop', compact('products', 'images', 'sizes', 'categories', 'total_price', 'order_success','carts'));
+        }
     }
 
     public function getWomanSection(Request $request) {
@@ -111,12 +120,20 @@ class ProductController extends Controller
         $images = Image::whereIn('product_id', $products->pluck('id'))->get();
         $categories = Category::all();
         $sizes = Size::all();
+        $carts = app()->call('App\Http\Controllers\CartController@index');
+        $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
+        $order_success = session('order_success', false);
 
-        return response()->json([
-            'products' => $products,
-            'images' => $images,
-            'sizes' => $sizes
-        ]);
+        if ($request->ajax()) {
+            return response()->json([
+                'products' => $products,
+                'images' => $images,
+                'sizes' => $sizes
+            ]);
+        }
+        else {
+            return view('shop', compact('products', 'images', 'sizes', 'categories', 'total_price', 'order_success','carts'));
+        }
     }
 
     public function getAllSection(Request $request) {

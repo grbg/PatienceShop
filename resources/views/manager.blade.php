@@ -22,9 +22,10 @@
         </div>
 
         <div class="account_block">
-            <img class="account_button favorite" src="{{ asset('assets/ui_icons/favorite.png') }}">
             @if (auth()->user())
-                <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+                <a href="{{ route('profile') }}">
+                    <img class="account_button account_in" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+                </a>
             @else
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
             @endif

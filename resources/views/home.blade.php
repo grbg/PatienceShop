@@ -15,9 +15,16 @@
         <div class="logo">
             <a href="{{ route('home') }}"><p class="logo_label">Patience</p></a>
         </div>
-        <div class="account">
-            <img class="account_button" src="{{ asset('assets/ui_icons/account.png') }}">
-            <img class="account_button" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
+        
+        <div class="account_block">
+            @if (auth()->user())
+                <a href="{{ route('profile') }}">
+                    <img class="account_button account_in" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+                </a>
+            @else
+                <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
+            @endif
+            <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
         </div>
     </header>
 

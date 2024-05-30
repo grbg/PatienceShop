@@ -22,7 +22,9 @@
 
         <div class="account_block">
             @if (auth()->user())
-                <img class="account_button account" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+                <a href="{{ route('profile') }}">
+                    <img class="account_button account_in" src="{{ asset('assets/ui_icons/account_auth.png') }}">
+                </a>
             @else
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
             @endif
@@ -32,8 +34,23 @@
         
         <div class="breadcrumbs">
             <p>Каталог</p>
-            <p class="line"> — </p> 
-            <span class="gender_bc">Все</span>
+            <p class="line"> — </p>
+            <?php
+                $url = $_SERVER['REQUEST_URI'];
+    
+                // Check if the URL contains the string 'man'
+                if (strpos($url, 'man') !== false) {
+                // If 'man' is found in the URL, set the text to 'Мужское'
+                    $genderText = 'Мужское';
+                } 
+                elseif (strpos($url, 'woman') !== false) {
+                    $genderText = 'Женское';
+                }
+                else {
+                    $genderText = 'Все';
+                }
+            ?>
+            <span class="gender_bc">{{ $genderText }}</span>
         </div>
 
         <div class="categories_container">
@@ -233,24 +250,6 @@
             </div>
             @endif
         </div>
-        
-
-    <script>
-        const menu_btn = document.querySelector('.menu_button');
-        const cross_btn = document.querySelector('.cross_button');
-
-        menu_btn.addEventListener('click', function() {
-            var burger = document.querySelector('.burger_menu');
-
-            burger.classList.toggle('active');
-        });
-
-        cross_btn.addEventListener('click', function() {
-            var burger = document.querySelector('.burger_menu');
-
-            burger.classList.toggle('active');
-        });
-    </script>
 
     <script>
         const login = document.querySelector('.login');
@@ -614,7 +613,11 @@
                 url += `/${category}`;
             }
 
-            fetch(url)
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
                 .then((response) => response.json())
                 .then((data) => {
                     updateProductList(data.products, data.images, data.sizes);

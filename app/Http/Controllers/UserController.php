@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\Validator;
 use App\User;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Cart;
+use App\Models\Image;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 
 
 class UserController extends Controller
@@ -59,6 +61,8 @@ class UserController extends Controller
     {
         $user = auth()->user();
         $orders = Order::where('user_id', $user->id)->get();
+        $products = Product::all();
+        $images = Image::all();
     
         $orderItems = OrderItem::whereIn('order_id', $orders->pluck('id'))->get();
     
@@ -70,7 +74,41 @@ class UserController extends Controller
 
         $total_price = app()->call('App\Http\Controllers\CartController@getUserCartTotalPrice');
 
-        return view('profile', compact('user', 'orders', 'carts', 'total_price'));
+        $sizes = app()->call('App\Http\Controllers\SizeController@getAllSizes');
+
+        return view('profile', compact('user', 'orders', 'carts', 'total_price', 'sizes', 'products', 'images'));
     }
 
+    public function update(Request $request)    {
+        $user = Auth::user();
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->phone = $request->input('phone');
+        // Предполагая, что формат даты в БД такой же, как и в форме
+        $user->birthday = \Carbon\Carbon::createFromFormat('d.m.Y', $request->input('birthday'))->format('Y-m-d');
+        $user->save();
+
+        // Обновление данных в сессии
+        $request->session()->put('user', $user);
+
+        return redirect()->back()->with('success', 'Информация успешно обновлена');
+    }
+
+    public function deleteAccount(Request $request) {
+        $user = Auth::user();
+        // Удалите аккаунт пользователя (ваша реализация удаления аккаунта)
+
+        // Выход из сессии
+        Auth::logout();
+
+        $request->session()->forget('user');
+
+        return redirect('/')->with('success', 'Ваш аккаунт успешно удален и вы вышли из системы.');
+    }
+
+    public function logout()    {
+        Auth::logout();
+
+        return redirect('/')->with('success', 'Ваш аккаунт успешно удален и вы вышли из системы.');
+    }
 }

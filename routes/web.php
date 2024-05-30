@@ -44,7 +44,7 @@ Route::post('/add-product', [ProductController::class, 'addProduct'])->name('add
 
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
-Route::get('/profile',  [UserController::class, 'showUserData']);
+Route::get('/profile',  [UserController::class, 'showUserData'])->name('profile');
 
 Route::post('/cart/add', [CartController::class, 'addProductInCart']);
 
@@ -61,3 +61,9 @@ Route::get('/success', [CartController::class, 'showSuccess']);
 Route::post('/order/success', [OrderController::class, 'createOrder'])->name('order.create');
 
 Route::delete('/cart/init', [CartController::class, 'getCartData'])->name('cart.data');
+
+Route::post('/profile/update', [ UserController::class,  'update'])->name('update.profile');
+
+Route::delete('profile/delete', 'UserController@deleteAccount')->name('delete.account');
+
+Route::post('/logout', 'UserController@logout')->name('logout');
