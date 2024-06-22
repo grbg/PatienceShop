@@ -68,18 +68,19 @@ class ProductController extends Controller
     }
 
     public function indexProduct()  {
-        $products = Product::all();
-        $images = Image::whereIn('product_id', $products->pluck('id'))->get();
-        $categories = Category::all();
-        $product_category = DB::table('category_product')->get();
-        $sizes = Size::all();
-
-        if (request()->ajax()) {
-            return response()->json([
-                'products' => $products,
-                'images' => $images
-            ]);
-        }
+        if (auth()->user()->is_admin == true) {
+            $products = Product::all();
+            $images = Image::whereIn('product_id', $products->pluck('id'))->get();
+            $categories = Category::all();
+            $product_category = DB::table('category_product')->get();
+            $sizes = Size::all();
+    
+            if (request()->ajax()) {
+                return response()->json([
+                    'products' => $products,
+                    'images' => $images
+                ]);
+            }
 
         // foreach ($products as $product) {
         //     $product_categories = DB::table('category_product')
@@ -91,7 +92,9 @@ class ProductController extends Controller
         //     $product->categories = $product_categories;
         // }
 
-        return view('manager', compact('products', 'images', 'categories', 'product_category', 'sizes'));
+            return view('manager', compact('products', 'images', 'categories', 'product_category', 'sizes'));
+        }
+        else abort(404);
     }
 
     public function getManSection(Request $request) {
@@ -347,6 +350,7 @@ class ProductController extends Controller
         
         return view('product', compact('product','related_products','products', 'images', 'sizes', 'categories', 'total_price', 'carts'));
     }
+
 }
 
 

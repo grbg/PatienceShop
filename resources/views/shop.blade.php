@@ -39,12 +39,12 @@
                 $url = $_SERVER['REQUEST_URI'];
     
                 // Check if the URL contains the string 'man'
-                if (strpos($url, 'man') !== false) {
+                if (strpos($url, 'woman') !== false) {
                 // If 'man' is found in the URL, set the text to 'Мужское'
-                    $genderText = 'Мужское';
-                } 
-                elseif (strpos($url, 'woman') !== false) {
                     $genderText = 'Женское';
+                } 
+                elseif (strpos($url, 'man') !== false) {
+                    $genderText = 'Мужское';
                 }
                 else {
                     $genderText = 'Все';
@@ -167,18 +167,12 @@
                         <p class="total_price_label">Итого </p>
                         <p class="total_price">{{ $total_price }} ₽</p>
                     </div>
+                    @if ($carts)
                     <a href="{{ route('order.confirm') }}"><button class="_button">Оформить заказ</button></a>
+                    @else
+                    <button class="_button">Оформить заказ</button>
+                    @endif
                 </div>
-        </div>
-
-        <div class="burger_menu">
-            <div class="cross_button">
-                <img src="{{ asset('assets/ui_icons/cross.png') }}">
-            </div>
-            <p class="menu_item">Новинки</p>
-            <p class="menu_item">Популярное</p>
-            <p class="menu_item">Аксессуары</p>
-            <p class="menu_item">Акции</p>
         </div>
 
         <div class="login_block">
@@ -196,6 +190,7 @@
             <div class="account_block">
                 <form class="login_form form" method="GET" action="{{ route('login') }}">
                     @csrf
+                    <p class="error" id="incorrect"></p>
                     <input class="_input" type="text" name="email_login" placeholder="Введите ваш e-mail">
                     <div class="error_container"><p  class="error"></p></div>
                     <input class="_input" type="password" name="password_login" placeholder="Введите пароль">
@@ -217,7 +212,7 @@
                     <input class="_input" name="birthday" type="date" placeholder="Дата рождения">
                     <div class="error_container"><p class="error"></p></div>
                     <input class="_input" name="password" type="password" placeholder="Введите пароль">
-                    <div class="error_container"><p class="error"></p></div>
+                    <div class="error_container"><p id="password-error" class="error"></p></div>
                     <input class="_input" type="text" placeholder="Повторите пароль">
                     <div class="error_container"><p class="error"></p></div>
                     <button class="_button" type="submit" onclick="submitForm()">СОЗДАТЬ АККАУНТ</button>
@@ -228,13 +223,7 @@
 
         <div class="modal_container">
             <div class="modal_background">
-                <div class="success_modal">
-                <div class="time_line"></div>
-                <div class="success_message">
-                    <h1>Пользователь успешно зарегистрирован!</h1>
-                    <p>Теперь все ваши покупки будут отображаться в корзине</p>
-                </div>
-                </div>
+                
             </div>
 
             <div class="add_product_modal">
@@ -243,12 +232,17 @@
 
             @if ($order_success)
             <div class="order_modal">
-                <div class="success_message">
-                    <img src="{{ asset('storage/assets/ui_icons/success.png') }}">
-                    <p>Заказ успешно оформлен</p>
-                </div>
+                <p>Заказ успешно оформлен</p>
             </div>
             @endif
+        </div>
+
+        <div class="success_modal">
+            <div class="time_line"></div>
+            <div class="success_message">
+                <h1>Пользователь успешно зарегистрирован!</h1>
+                <p>Теперь все ваши покупки будут отображаться в корзине</p>
+            </div>
         </div>
 
     <script>
@@ -294,6 +288,22 @@
                 element.style.borderBottom = '1px solid rgb(165, 165, 165)';
             });
         });
+
+        const inputElements = document.querySelectorAll('._input');
+
+        inputElements.forEach(element => {
+            element.addEventListener('focus', function() {
+                this.style.borderBottom = '1px solid rgb(165, 165, 165)';
+                var errorContainer = this.nextElementSibling; // Получаем следующий элемент
+                if (errorContainer && errorContainer.classList.contains('error_container')) {
+                    var error = errorContainer.querySelector('p.error'); // Находим элемент <p> внутри контейнера
+                    if (error) {
+                        error.textContent = ''; // Очищаем текст внутри <p>
+                    }
+                }
+            });
+        });         
+        
     </script>
 
     <script>
@@ -342,13 +352,16 @@
                         document.getElementById('email-error').textContent = data.errors.email[0];
                         document.querySelector('input[name="email"]').style.borderBottom = '1px solid red';
                     }
+                    if (data.errors.password) {
+                        document.getElementById('password-error').textContent = data.errors.password[0];
+                        document.querySelector('input[name="password"]').style.borderBottom = '1px solid red';
+                    }
                 } else if (data.success) {
                     const successModal = document.querySelector('.success_modal');
                     var timeLine = document.querySelector('.time_line');
                     const login_block = document.querySelector('.login_block');
                     const modal_background = document.querySelector('.modal_background');
 
-                    modal_background.style.display = 'block';
                     successModal.classList.add('active');
                     timeLine.classList.add('active');
                     login_block.classList.remove('active');
@@ -365,7 +378,46 @@
             });
         }
 
+        const loginForm = document.querySelector('.login_form');
 
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let formData = new FormData(this);
+
+            fetch('login', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Сброс стилей и сообщений об ошибках перед обработкой новых данных
+                document.querySelector('input[name="email_login"]').style.borderBottom = '1px solid rgb(165, 165, 165)';
+                document.querySelector('input[name="password_login"]').style.borderBottom = '1px solid rgb(165, 165, 165)';
+                document.querySelector('.error').textContent = '';
+
+                if (data.errors) {
+
+                    if (data.errors) {
+                        document.querySelector('#incorrect').textContent = "Неверный логин или пароль"
+                    }
+                    if (data.errors.email_login) {
+                        document.querySelector('.error_container:first-of-type .error').textContent = data.errors.email_login[0];
+                        document.querySelector('input[name="email_login"]').style.borderBottom = '1px solid red';
+                    }
+                    if (data.errors.password_login) {
+                        document.querySelector('.error_container:last-of-type .error').textContent = data.errors.password_login[0];
+                        document.querySelector('input[name="password_login"]').style.borderBottom = '1px solid red';
+                    }
+                } else if (data.success) {
+                    // В случае успешного входа выполняйте необходимые действия, например, перенаправление или открытие другой страницы
+                    window.location.href = '/profile'; // Пример перенаправления на страницу профиля
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
 
     </script>
 
@@ -804,12 +856,11 @@
                     .then((response) => response.json())
                     .then((data) => {
                         if (data.success) {
-                            const add_modal =
-                            document.querySelector(".add_product_modal");
+                            const add_modal = document.querySelector('.add_product_modal');
                             updateCart(data.cart);
-                            add_modal.style.display = "block";
+                            add_modal.classList.add('active');
                             setTimeout(() => {
-                                add_modal.style.display = "none";
+                                add_modal.classList.remove('active');
                             }, 3000);
                         } else {
                             alert("Failed to add product to cart.");
@@ -823,7 +874,7 @@
         });
     </script>
 
-<script>
+    <script>
         document.addEventListener("DOMContentLoaded", function () {
         const products = document.querySelectorAll('.product');
 
@@ -841,10 +892,10 @@
 
         window.addEventListener('scroll', animateOnScroll);
         window.addEventListener('load', animateOnScroll); // для анимации элементов, которые видны сразу при загрузке страницы
-    });
+        });
 
   
-</script>
+    </script>
 
 </body>
 </html>

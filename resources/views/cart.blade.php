@@ -12,8 +12,7 @@
     <header>
         <div class="menu_block">
             <div class="gender">
-                <p class="gender_label" id="woman-section-btn">Женское</p>
-                <p class="gender_label" id="man-section-btn">Мужское</p>
+                <a href="{{ route('shop') }}"><p class="gender_label">Каталог</p></a>
             </div>
         </div>
 
@@ -29,7 +28,6 @@
             @else
                 <img class="account_button account" src="{{ asset('assets/ui_icons/account.png') }}">
             @endif
-            <img class="account_button shoppingBag" src="{{ asset('assets/ui_icons/shoppingBag.png') }}">
         </div>
     </header>
 
@@ -67,10 +65,9 @@
                             </div>
                             <div class="cart_item_footer">
                                 <p class="cart_item_price">{{ number_format($cartItem['price'], 0, '', ' ') }} ₽</p>
-                                <div class="cart_item_buttons">
-                                    <img class="" src="{{ asset('storage/assets/ui_icons/favorite.png') }}">
+                                <!-- <div class="cart_item_buttons">
                                     <img class="" src="{{ asset('storage/assets/ui_icons/trash.png') }}">
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -85,31 +82,22 @@
                 </div>
                     <form id="deliveryForm" enctype="multipart/enctype">
                         <div class="input_container">
-                            <input type="text" id="country" class="_input" name="country" placeholder="Страна" >
+                            <input type="text" id="country" class="_input" name="country" placeholder="Страна" value="{{ $address->country ?? ''}}">
                         </div>
                         <div class="input_container">
-                            <input type="text" id="city" class="_input" name="city" placeholder="Город" >
+                            <input type="text" id="city" class="_input" name="city" placeholder="Город" value='{{ $address->city ?? ""}}'>
                         </div>
                         <div class="input_container">
-                            <input type="text" id="street" class="_input" name="street" placeholder="Улица" >
+                            <input type="text" id="street" class="_input" name="street" placeholder="Улица" value='{{ $address->street ?? ""}}'>
                         </div>
                         <div class="input_container">
-                            <input type="text" id="house" class="_input" name="house" placeholder="Дом" >
+                            <input type="text" id="house" class="_input" name="house" placeholder="Дом" value='{{ $address->house ?? ""}}'>
                         </div>
                         <div class="input_container">
-                            <input type="text" id="house" class="_input" name="zip" placeholder="Почтовый индекс">
+                            <input type="text" id="house" class="_input" name="zip" placeholder="Почтовый индекс" value='{{ $address->zip_code ?? ""}}'>
                         </div>
                         <div id="map" style="width: 600px; height: 400px;"></div>
-                        <div class="delivery_method_container">
-                            <div id="post" class="delivery_method active">
-                                <img src="{{ asset('storage/assets/ui_icons/post_light.png') }}">
-                                <p>Почта России</p>
-                            </div>
-                            <div id="delivery" class="delivery_method">
-                                <img src="{{ asset('storage/assets/ui_icons/delivery_dark.png') }}">
-                                <p>Доставка Курьером</p>
-                            </div>
-                        </div>
+
                         <div class="cart_total_price">
                             <p class="total_price_label">Итого </p>
                             <p class="total_price">{{ $total_price }} ₽</p>
@@ -121,12 +109,7 @@
         </div>
     </div>
 
-    <div class="order_modal">
-        <div class="success_message">
-            <img src="{{ asset('storage/assets/ui_icons/success.png') }}">
-            <p>Заказ успешно оформлен</p>
-        </div>
-    </div>
+    
 </body>
 
 <script src="https://api-maps.yandex.ru/2.1/?apikey=21c567b8-1fe2-4288-a33b-41a6fdf416a5&lang=ru_RU>

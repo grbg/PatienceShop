@@ -12,8 +12,7 @@
     <header>
         <div class="menu_block">
             <div class="gender">
-                <p class="gender_label" id="woman-section-btn">Женское</p>
-                <p class="gender_label" id="man-section-btn">Мужское</p>
+                <a href="{{ route('shop') }}"><p class="gender_label">Каталог</p></a>
             </div>
         </div>
 
@@ -127,7 +126,7 @@
                     </div>
                 </div>
                 <div class="product_button_container">
-                    <div class="delete_button" data-product-id="${product.id}">Удалить</div>
+                    <div class="delete_button" data-product-id="{{ $product->id}}">Удалить</div>
                     <button  type="submit" id="product_upload_container">Обновить</button>
                 </div>
             </form>
@@ -135,30 +134,39 @@
         </div>
 
         <div class="modal_background">
-            <div class="insert_modal">
+            <form class="insert_modal" method="post" >
+                @csrf
                 <h1>Добавление товара</h1>
-                <div class="insert_modal_form"  method="post">
-                    @csrf
+
+                <div id="step_1" class="insert_modal_form active"  method="post">
+                
                     <div class="input_wrapper">
-                        <p class="product_input_label">Название товара</p>
-                        <input class="input_product modal_input" name="insert_name">
+                        <p>Название товара</p>
+                        <input class="input_product modal_input _input" name="insert_name" placeholder="">
                     </div>
                     <div class="input_wrapper">
-                        <p class="product_input_label">Описание товара</p>
+                        <p>Описание товара</p>
                         <textarea type="text" name="product_desc" class="product_input product_message modal_input_textarea"></textarea>
                     </div>
                     <div class="input_wrapper">
-                        <p class="product_input_label">Цена</p>
-                        <input class="input_product modal_input" name="insert_price">
+                        <p>Цена</p>
+                        <input class="input_product modal_input _input" name="insert_price">
                     </div>
-                    <div class="input_wrapper">
+                    <div class="input_button">
+                        <button  class="_button step_1_button" type="button" id="add_product_button">Далее</button>
+                    </div>
+                </div>
+
+                <div id="step_2" class="insert_modal_form"  method="post">
+                    <div class="input_wrapper_container">
+                        <div class="input_wrapper">
                         <p class="product_input_label">Пол</p>
                         <div class="product_gen_option">
                             <div id="man" class="product_gen_option_val active">Мужской</div>
                             <div id="woman" class="product_gen_option_val">Женский</div>
                         </div>
-                    </div>
-                    <div class="input_wrapper">
+                        </div>
+                        <div class="input_wrapper">
                         <div class="category_selector">
                             <p class="product_input_label">Категория</p>
                             <div class="category_selected">
@@ -191,9 +199,16 @@
                                 @endforeach
                             </div>
                         </div>
+                        </div>
                     </div>
-            </div>
-                    <div class="upload_input">
+                    <div class="input_button">
+                        <button  class="_button back_1_button" type="button" id="add_product_button">Назад</button>
+                        <button  class="_button step_2_button" type="button" id="add_product_button">Далее</button>
+                    </div>
+                </div>
+
+                <div id="step_3" class="insert_modal_form"  method="post">
+                     <div class="upload_input">
                         <label for="upload_image">
                                 <div class="add_img_button">
                                     <div class="upload_img_icon_container">
@@ -205,11 +220,15 @@
                         <input style="display: none" id="upload_image" type="file" name="image">
                     </div>
                     <div class="input_button">
-                        <button  type="submit" id="add_product_button">Обновить</button>
+                        <button  class="_button step_1_button back_2_button" type="button" id="add_product_button">Назад</button>
+                        <button  class="_button step_1_button" type="submit" id="add_product_button">Добавить</button>
                     </div>
                 </div>
-            </div>
+            </form>
+
         </div>
+            
+
 
         <div class="success_modal">
             <div class="time_line"></div>
@@ -356,7 +375,6 @@
                     }
                 });
             });
-Полный
         </script>
 
         <script>
@@ -376,7 +394,6 @@
 
         <script>
             
-
             document.querySelectorAll('.product_gen_option').forEach((option) => {
                 var male_btn = option.querySelector('#man');
                 var female_btn = option.querySelector('#woman');
@@ -406,6 +423,7 @@
             // });
 
             
+
             document.querySelectorAll('.category_selector').forEach((selector) => {
                 var selected = selector.querySelector('.category_selected');    
                 var category_btn = selected.querySelector('#product_category');
@@ -430,7 +448,6 @@
                 })});
                 });
             
-
         </script>
 
         <script>
@@ -463,9 +480,9 @@
         </script>
         
         <script>    
-            document.querySelector('.insert_modal_form').addEventListener('submit', function(e) {
+            document.querySelector('.insert_modal').addEventListener('submit', function(e) {
             e.preventDefault();
-            const form = document.querySelector('.insert_modal_form');
+            const form = document.querySelector('.insert_modal');
 
             const formData = new FormData(this);            
             const gender = insert_modal.querySelector(".product_gen_option_val.active").id;
@@ -479,6 +496,7 @@
 
             categories.forEach((category, index) => {
                 formData.append(`categories[${index}]`, category);
+                console.log(category);
             });
 
             fetch('/add-product', {
@@ -491,17 +509,7 @@
             .then(response => response.json())
             .then(data => {
             if (data.success) {
-                insert_modal.style.display = 'none';
-                const successModal = document.querySelector('.success_modal');
-                var timeLine = document.querySelector('.time_line');
-
-                successModal.classList.add('active');
-                timeLine.classList.add('active');
-                // Через 5 секунд скрываем модальное окно
-                setTimeout(() => {
-                    successModal.classList.remove('active');
-                    timeLine.classList.remove('active');
-                }, 3000);
+                window.location.reload();
                 this.reset();
             } else {
                 alert('Ошибка при добавлении товара.');
@@ -514,6 +522,38 @@
             });
         </script>
 
+        <script>
+            const form_1 = document.getElementById('step_1');
+            const form_2 = document.getElementById('step_2');
+            const form_3 = document.getElementById('step_3');
+
+            const step_1 = form_1.querySelector('.step_1_button');
+            const step_2 = form_2.querySelector('.step_2_button');
+            const back_1 = form_2.querySelector('.back_1_button');
+            const back_2 = form_3.querySelector('.back_2_button');
+
+            step_1.addEventListener('click', function() {
+                // form_2.classList.add('active');
+                // form_1.classList.remove('active');
+                form_1.style.left = '-750px';
+                form_2.style.left = '25px';
+            });
+
+            step_2.addEventListener('click', function() {
+                form_2.style.left = '-750px';
+                form_3.style.left = '25px';
+            });
+
+            back_1.addEventListener('click', function() {
+                form_2.style.left = '750px';
+                form_1.style.left = '25px';
+            });
+
+            back_2.addEventListener('click', function() {
+                form_3.style.left = '750px';
+                form_2.style.left = '25px';
+            });
+        </script>
 
 </body>
 </html>

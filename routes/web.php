@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\AddressController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +21,7 @@ use App\Http\Controllers\OrderController;
 Route::get('/', [ProductController::class, 'index'])->name('home');
 
 Route::post('/registration', [UserController::class, 'userRegister'])->name('register');
-Route::get('/login', [UserController::class, 'userLogin'])->name('login');
+Route::post('/login', [UserController::class, 'userLogin'])->name('login');
 
 Route::get('/shop', [ProductController::class, 'store'])->name('shop');
 
@@ -34,7 +35,7 @@ Route::post('/shop/filter', [ProductController::class, 'filterProducts'])->name(
 
 Route::get('/shop/{gender}/{category}', [ProductController::class, 'filterByCategory']);
 
-Route::get('/manager', [ProductController::class, 'indexProduct']);
+Route::get('/manager', [ProductController::class, 'indexProduct'])->name('manager');
 
 // Route::post('product/update/{id}', [ProductController::class, 'updateProduct'])->name('product_update');
 
@@ -63,6 +64,9 @@ Route::post('/order/success', [OrderController::class, 'createOrder'])->name('or
 Route::delete('/cart/init', [CartController::class, 'getCartData'])->name('cart.data');
 
 Route::post('/profile/update', [ UserController::class,  'update'])->name('update.profile');
+
+Route::post('/profile/address/update', [AddressController::class, 'updateAddressData'])->name('update.address');
+
 
 Route::delete('profile/delete', 'UserController@deleteAccount')->name('delete.account');
 

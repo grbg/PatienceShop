@@ -43,8 +43,11 @@ class User extends Authenticatable
         'birthday' => 'date',
     ];
 
-    public function orders()
-    {
+    public function orders()    {
         return $this->hasMany(Order::class);
+    }
+
+    public function addresses(): HasMany    {
+        return $this->hasMany(Address::class);
     }
 }

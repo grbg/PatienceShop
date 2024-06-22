@@ -9,6 +9,7 @@ use App\Models\Image;
 use App\Models\Cart;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Address;
 
 class CartController extends Controller
 {
@@ -99,6 +100,8 @@ class CartController extends Controller
 
         $cartItems = Cart::where('user_id', $user->id)->get();
 
+        $address = Address::where('user_id', $user->id)->first();
+
         if ($cartItems->isEmpty()) {
             return view('cart', ['cartItems' => [], 'total_price' => 0]);
         }
@@ -131,7 +134,7 @@ class CartController extends Controller
         });
 
         // Передаем данные в представление
-        return view('cart', ['cartItems' => $cartData, 'total_price' => $totalPrice]);
+        return view('cart', ['cartItems' => $cartData, 'total_price' => $totalPrice, 'address' => $address]);
     }
 
 

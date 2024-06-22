@@ -11,6 +11,7 @@ use App\Models\Image;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Address;
 
 
 class UserController extends Controller
@@ -45,24 +46,31 @@ class UserController extends Controller
             'email_login' => 'required|string|email|max:191',
             'password_login' => 'required|string|min:8',
         ]);
-
+        if ($validator->fails()) {
+            return response()->json(['errors'=>$validator->errors()], 422);
+        }
         if (Auth::attempt(['email' => $request->email_login, 'password' => $request->password_login])) {
             $user = Auth::user();
 
             $carts = Cart::where('user_id', Auth::id())->with('product')->get();
 
-            return redirect()->back()->with(['user' => $user], ['carts' => $carts]);
+            return response()->json(['success' => true, 'user' => $user, 'carts' => $carts]);
         }
+        else {
+           $errors = ['Неверный логин или пароль'];
 
-        return redirect('/');
+            $errors[] = 'Неверный логин или пароль';
+
+            return response()->json(['errors' => $errors], 422);
+        }
     }
 
-    public function showUserData()
-    {
+    public function showUserData()  {
         $user = auth()->user();
         $orders = Order::where('user_id', $user->id)->get();
         $products = Product::all();
         $images = Image::all();
+        $address = Address::where('user_id', $user->id)->first();
     
         $orderItems = OrderItem::whereIn('order_id', $orders->pluck('id'))->get();
     
@@ -76,7 +84,7 @@ class UserController extends Controller
 
         $sizes = app()->call('App\Http\Controllers\SizeController@getAllSizes');
 
-        return view('profile', compact('user', 'orders', 'carts', 'total_price', 'sizes', 'products', 'images'));
+        return view('profile', compact('user', 'orders','address', 'carts', 'total_price', 'sizes', 'products', 'images'));
     }
 
     public function update(Request $request)    {
@@ -98,9 +106,12 @@ class UserController extends Controller
         $user = Auth::user();
         // Удалите аккаунт пользователя (ваша реализация удаления аккаунта)
 
+
         // Выход из сессии
         Auth::logout();
 
+        $user->delete();
+        
         $request->session()->forget('user');
 
         return redirect('/')->with('success', 'Ваш аккаунт успешно удален и вы вышли из системы.');

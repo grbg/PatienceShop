@@ -35,8 +35,14 @@
     <div class="profile_button_container">
         <p id="account_data" class="profile_button">Мои данные</p>
         <p id="account_order" class="profile_button">Мои заказы</p>
+        <p id="account_address" class="profile_button">Адрес Доставки</p>
+        @if (auth()->user()->is_admin == true)
+            <p id="product_manager" class="profile_button">Менеджер товаров</p>
+            <p id="order_manager" class="profile_button">Просмотр заказов</p>
+        @endif
         <p id="account_logout" class="profile_button">Выйти из аккаунта</p>
     </div>
+
     <div class="profile_container">
         <p class="profile_label">Здравствуйте, {{ $user->name }}</p>
 
@@ -161,6 +167,66 @@
             <div class="profile_data">
                 <p>Дата рождения</p>
                 <input type="text" name="birthday" class="profile_data_value _input" value="{{ $user->birthday->format('d.m.Y') }}">
+            </div>
+            <button type="submit" class="_button">Сохранить изменения</button>
+        </form>
+
+        <div class="address_data_container">
+            <div class="address_data">
+                <p>Страна</p>
+                <div class="address_data_value">{{ $address->country ?? 'Не указано'}}</div>
+            </div>
+            <div class="address_data">
+                <p>Город</p>
+                <div class="address_data_value">{{ $address->city ?? 'Не указано'}}</div>
+            </div>
+            <div class="address_data">
+                <p>Улица</p>
+                <div class="address_data_value">{{ $address->street ?? 'Не указано'}}</div>
+            </div>
+            <div class="address_data">
+                <p>Дом</p>
+                <div class="address_data_value">{{ $address->house ?? 'Не указано'}}</div>
+            </div>
+            <div class="address_data">
+                <p>Почтовый индекс</p>
+                <div class="address_data_value">{{ $address->zip_code ?? 'Не указано'}}</div>
+            </div>
+            <button id="edit_address_button" class="_button">
+                @if ($address)
+                    Редактировать
+                @else
+                    Добавить адрес
+                @endif
+            </button>
+        </div>
+
+        <form class="edit_address_data" method="POST" action="{{ route('update.address') }}">
+            @csrf
+            <div class="profile_data">
+                <p>Страна</p>
+                <input type="text" name="country" class="profile_data_value _input" value='{{ $address->country ?? ""}}'></input>
+                <div class="error_container"><p class="error country-error"></p></div>
+            </div>
+            <div class="profile_data">
+                <p>Город</p>
+                <input type="text" name="city" class="profile_data_value _input" value='{{ $address->city ?? ""}}'>
+                <div class="error_container"><p class="error city-error"></p></div>
+            </div>
+            <div class="profile_data">
+                <p>Улица</p>
+                <input type="text" name="street" class="profile_data_value _input" value='{{ $address->street ?? ""}}'>
+                <div class="error_container"><p class="error street-error"></p></div>
+            </div>
+            <div class="profile_data">
+                <p>Домя</p>
+                <input type="text" name="house" class="profile_data_value _input" value='{{ $address->house ?? ""}}'>
+                <div class="error_container"><p class="error house-error"></p></div>
+            </div>
+            <div class="profile_data">
+                <p>Почтовый индекс</p>
+                <input type="text" name="zip_code" class="profile_data_value _input" value='{{ $address->zip_code ?? ""}}'>
+                <div class="error_container"><p class="error zip_code-error"></p></div>
             </div>
             <button type="submit" class="_button">Сохранить изменения</button>
         </form>
@@ -298,38 +364,79 @@
         </div>
     </div>
 
+    @if (session('success'))
+    <div id="update_modal" class="_modal">
+        <p>Данные изменены</p> 
+    </div>
+    @endif
+
     <script>
         const acc_data_btn = document.getElementById("account_data");
         const acc_order_btn = document.getElementById("account_order");
         const acc_logout_btn = document.getElementById("account_logout");
         const editProfileButton = document.getElementById('edit_profile_button');
+        const addressButton = document.getElementById('account_address');
+        const editAddressButton = document.getElementById('edit_address_button');
 
         var data_container = document.querySelector('.profile_data_container');
         var editProfileForm = document.querySelector('.edit_profile_data');
         var order_container = document.querySelector('.order_container');
+        var addressContainer = document.querySelector('.address_data_container');
+        var editAddressContainer = document.querySelector('.edit_address_data');
+
+        addressButton.addEventListener("click", function() {
+            addressContainer.style.display = 'block';
+            data_container.style.display = 'none';
+            order_container.style.display = 'none';
+            editProfileForm.style.display = 'none';
+            editAddressContainer.style.display = 'none';
+        });
 
         acc_data_btn.addEventListener("click", function() {
             data_container.style.display = 'block';
             order_container.style.display = 'none';
             editProfileForm.style.display = 'none';
+            editProfileForm.style.display = 'none';
+            addressContainer.style.display = 'none';
+            editAddressContainer.style.display = 'none';
         });
 
         acc_order_btn.addEventListener("click", function() {
+            order_container.style.display = 'block';
             data_container.style.display = 'none';
             editProfileForm.style.display = 'none';
-            order_container.style.display = 'block';
+            addressContainer.style.display = 'none';
+            editAddressContainer.style.display = 'none';
         });
 
         editProfileButton.addEventListener("click", function() {
             editProfileForm.style.display = 'block';
             data_container.style.opacity = '0';
             data_container.style.transform = 'translateY(20px)';
-        
+            addressContainer.style.display = 'none';
+            editAddressContainer.style.display = 'none';
+
             setTimeout(() => {
                 editProfileForm.style.opacity = '1';
                 editProfileForm.style.transform = 'translateY(0)';
                 data_container.style.display = 'none';
                 order_container.style.display = 'none';
+            }, 100);
+        });
+
+       editAddressButton.addEventListener("click", function() {
+            editAddressContainer.style.display = 'block';
+            addressContainer.style.opacity = '0';
+            addressContainer.style.transform = 'translateY(20px)';
+            addressContainer.style.display = 'none';
+            editProfileForm.style.display = 'none';
+        
+            setTimeout(() => {
+                editAddressContainer.style.opacity = '1';
+                editAddressContainer.style.transform = 'translateY(0)';
+                data_container.style.display = 'none';
+                order_container.style.display = 'none';
+                editProfileForm.style.display = 'none';
             }, 100);
         });
     </script>
@@ -504,15 +611,22 @@
             const profileButton = document.getElementById('account_data');
             const orderButton = document.getElementById('account_order');
             const logoutButton = document.getElementById('account_logout');
+            const addressButton = document.getElementById('account_address');
             const profileDataContainer = document.querySelector('.profile_data_container');
             const orderContainer = document.querySelector('.order_container');
             const editProfileForm = document.querySelector('.edit_profile_data');
+            const addressContainer = document.querySelector('.address_data_container')
+            const editAddressContainer = document.querySelector('.edit_address_data');
 
             function showProfileData() {
                 orderContainer.style.opacity = '0'; 
                 orderContainer.style.transform = 'translateY(20px)';
                 editProfileForm.style.opacity = '0'; 
                 editProfileForm.style.transform = 'translateY(20px)';
+                addressContainer.style.opacity = '0'; 
+                addressContainer.style.transform = 'translateY(20px)';
+                editAddressContainer.style.opacity = '0'; 
+                editAddressContainer.style.transform = 'translateY(20px)';
 
                 setTimeout(() => {
                     profileDataContainer.style.opacity = '1'; // Плавно сделать блок данных профиля видимым
@@ -522,11 +636,33 @@
                 }, 100);
             }
 
+            function showAddressContainer() {
+                    profileDataContainer.style.opacity = '0'; // Скрываем блок данных профиля
+                    profileDataContainer.style.transform = 'translateY(20px)';
+                    editProfileForm.style.opacity = '0'; 
+                    editProfileForm.style.transform = 'translateY(20px)';
+                    orderContainer.style.opacity = '0'; 
+                    orderContainer.style.transform = 'translateY(20px)';
+                    editAddressContainer.style.opacity = '0'; 
+                    editAddressContainer.style.transform = 'translateY(20px)';
+                
+                    setTimeout(() => {
+                        addressContainer.style.opacity = '1'; // Плавно сделать блок заказов видимым
+                        if (addressContainer.style.transform === 'translateY(20px)') {
+                            addressContainer.style.transform = 'translateY(0)';
+                        } // Плавно вернуть блок заказов на место
+                    }, 100);
+                }
+
             function showOrderContainer() {
                 profileDataContainer.style.opacity = '0'; // Скрываем блок данных профиля
                 profileDataContainer.style.transform = 'translateY(20px)';
                 editProfileForm.style.opacity = '0'; 
                 editProfileForm.style.transform = 'translateY(20px)';
+                addressContainer.style.opacity = '0'; 
+                addressContainer.style.transform = 'translateY(20px)';
+                editAddressContainer.style.opacity = '0'; 
+                editAddressContainer.style.transform = 'translateY(20px)';
 
                 setTimeout(() => {
                     orderContainer.style.opacity = '1'; // Плавно сделать блок заказов видимым
@@ -537,10 +673,108 @@
             }
 
 
+            addressButton.addEventListener('click', showAddressContainer);
             profileButton.addEventListener('click', showProfileData);
             orderButton.addEventListener('click', showOrderContainer);
+            logoutButton.addEventListener('click', () => {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), // Использование Laravel CSRF токена
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/'; // Перенаправление после выхода из аккаунта
+                    } else {
+                        console.error('Ошибка выхода из аккаунта:', response.statusText);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка выхода из аккаунта:', error);
+                });
+            });
         });
     </script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const add_modal = document.getElementById('update_modal');
+            add_modal.style.bottom = '5%';
+
+            setTimeout(() => {
+                add_modal.style.bottom = '-10%';
+            }, 3000);
+            setTimeout(() => {
+                add_modal.style.display = 'none';
+            }, 5000);
+        });
+    </script>
+
+    <script>
+        document.getElementById('product_manager').addEventListener('click', function() {
+            window.location.href = '{{ route("manager") }}';
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input._input');
+
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            // Сброс сообщения об ошибке и стиля границы
+            this.style.borderBottom = '1px solid rgb(165, 165, 165)';
+            const errorContainer = this.nextElementSibling.querySelector('.error');
+            if (errorContainer) {
+                errorContainer.textContent = '';
+            }
+        });
+    });
+
+});
+        const addressForm = document.querySelector('.edit_address_data');
+        const errorMessageContainer = document.createElement('div');
+        errorMessageContainer.classList.add('error-message');
+        addressForm.appendChild(errorMessageContainer);
+
+        addressForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let formData = new FormData(this);
+
+            fetch(addressForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelectorAll('input._input').forEach(input => {
+                    input.style.borderBottom = '1px solid rgb(165, 165, 165)';
+                });
+                errorMessageContainer.textContent = ''; // Очистка сообщения об ошибке
+                if (data.errors) {
+                    // Если есть ошибки, выводим их на страницу
+                for (const [key, messages] of Object.entries(data.errors)) {
+                    const input = document.querySelector(`input[name="${key}"]`);
+                    input.style.borderBottom = '1px solid red';
+                    let error_container = document.querySelector(`.${key}-error`);
+                    error_container.textContent = messages;
+                }
+                } else if (data.success) {
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorMessageContainer.textContent = 'Произошла ошибка при отправке запроса';
+                errorMessageContainer.style.color = 'red';
+            });
+    });
+    </script>
 </body>
 </html>
